@@ -11,7 +11,6 @@ namespace ProgettoMMDS
     {
         private int numberofJob;
         private int numberofMachine;
-        private string filename;
         private List<Job> jobsList;
 
         /// <summary>
