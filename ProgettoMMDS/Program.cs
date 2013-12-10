@@ -28,6 +28,7 @@ namespace ProgettoMMDS
                 }
 
                 System.Console.WriteLine("Premi un tasto qualsiasi!!!!");
+                System.Console.WriteLine("Premi un tasto qualsiasi!!!!");
 
                 System.Console.ReadKey();
             }
