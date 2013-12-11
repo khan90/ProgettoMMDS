@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace ProgettoMMDS
 {
-    ///Classe che effettua lo scheduling
+    /// <summary>
+    /// Classe che effettua lo scheduling
+    /// </summary>
     class Scheduler
     {
         List<Job> jobs = new List<Job>();
@@ -40,9 +42,15 @@ namespace ProgettoMMDS
                 }*/
                 //TODO: SearchSolution(); (la chiamata a DateTime.Now si potrebbe fare con un thread che non fa altro... pensiamoci!
                 //Stampa Lateness
-                Console.WriteLine("Lateness totale: " + getLateness(schedule).ToString());
+                Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
+
                 Console.ReadKey();
             }
+        }
+
+        List<int> SearchSolution(List<int> schedule)
+        {
+            return schedule;
         }
 
         public List<int> constructScheduleEDD(int m, int n)
@@ -77,11 +85,15 @@ namespace ProgettoMMDS
             }
             return schedule;
         }
-
-        public int getLateness(List<int> schedule)
+        /// <summary>
+        /// Funzione che calcola la Tardiness totale di uno schedule dato
+        /// </summary>
+        /// <param name="schedule">schedule di cui si vuole calcolare la Tardiness totale</param>
+        /// <returns>Tardiness totale</returns>
+        public int getTardiness(List<int> schedule)
         {
             int time = 0;
-            int lateness = 0;
+            int tardiness = 0;
             
             foreach(int i in schedule)
             {
@@ -93,11 +105,13 @@ namespace ProgettoMMDS
                     time += j.getProcessingTime();
                     if (time >= j.getDueDateTime())
                     {
-                        lateness += (time - j.getDueDateTime());
+                        tardiness += (time - j.getDueDateTime());
                     }
                 }
             }
-            return (lateness);
-        }        
+            return (tardiness);
+        }
+       
+
     }
 }
