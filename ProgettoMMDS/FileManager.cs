@@ -37,7 +37,7 @@ namespace ProgettoMMDS
                 numberofJob = int.Parse(token[0]);
                 numberofMachine = int.Parse(token[1]);
 #if (DEBUG)
-            System.Console.WriteLine("Numero di macchine: "+ numberofMachine+ "Numero di Job: "+ numberofJob);
+            Console.WriteLine("Numero di macchine: " + numberofMachine + " Numero di Job: " + numberofJob);
 #endif
                 jobsList = new List<Job>();
                 //riga 5: iniziano i job
@@ -53,12 +53,12 @@ namespace ProgettoMMDS
                 }
 
 #if (DEBUG)
-            System.Console.WriteLine("Job Estratti");
+            Console.WriteLine("Job Estratti");
 #endif
             }catch(FileNotFoundException fnfe)
             {
-                System.Console.WriteLine("File non Trovato\nPremere un tasto qualsiasi");
-                System.Console.ReadKey();
+                Console.WriteLine("File non Trovato\nPremere un tasto qualsiasi : \n");
+                Console.ReadKey();
                 Environment.Exit(0);
             }
         }
