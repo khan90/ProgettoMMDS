@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace ProgettoMMDS
 {
+    ///Classe che effettua lo scheduling
     class Scheduler
     {
         List<Job> jobs = new List<Job>();
