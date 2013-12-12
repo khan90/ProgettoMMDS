@@ -31,37 +31,40 @@ namespace ProgettoMMDS
                 //INIZIO CONTEGGIO SECONDI
                 DateTime startTime = DateTime.Now;
                 jobs = (fm.getJobsList());
-                //Ordinamento qui -> In ordine di DueDate:
-                jobs.Sort((x, y) => x.getDueDateTime().CompareTo(y.getDueDateTime()));
-                //a questo punto jobs è ordinato in base alla DueDate...
-                /*
+
+                
                 for (int i = 0; i < jobs.Count; i++)
                 {
                     Console.WriteLine(jobs[i].ToString());
                 }
-                */
-                List<int> schedule = new List<int>(constructScheduleEDD(fm.getNumberofMachine(), fm.getNumberofJobs()));
                 
-                /*//Stampa EDD
+                List<int> schedule = new List<int>(constructScheduleEDD(fm.getNumberofMachine(), fm.getNumberofJobs()));
+
+                //*//Stampa EDD
                 for (int i = 0; i < schedule.Count; i++)
                 {
                     Console.WriteLine(schedule[i].ToString());
-                }*/
+                }
+
+                Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
+                //*/
+
+
                 //TODO: SearchSolution(); (la chiamata a DateTime.Now si potrebbe fare con un thread che non fa altro... pensiamoci!
                 schedule = SearchSolutionRandom(schedule);
                 //Stampa Tardiness
                 Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
 
                 //FINE CONTEGGIO SECONDI
-                DateTime stopTime = DateTime.Now;
+               /* DateTime stopTime = DateTime.Now;
                 TimeSpan elapsedTime = stopTime.Subtract(startTime);
-                Console.WriteLine("Arrivato in " + elapsedTime.TotalMilliseconds + " ms");
+                Console.WriteLine("Arrivato in " + elapsedTime.TotalMilliseconds + " ms");*/
                 Console.ReadKey();
             }
         }
 
         /// <summary>
-        /// Ricerca locale di un minimo efettuando swap Random tra gli elementi.
+        /// Ricerca locale di un minimo effettuando swap Random tra gli elementi.
         /// </summary>
         /// <param name="schedule"></param>
         /// <returns></returns>
@@ -99,8 +102,18 @@ namespace ProgettoMMDS
             return schedule;
         }
 
+        /// <summary>
+        /// Costruisce uno Schedule EDD prendendo in input macchine e la lista dei job  
+        /// </summary>
+        /// <param name="m">Numero Macchine</param>
+        /// <param name="n">Numero Job</param>
+        /// <returns></returns>
         public List<int> constructScheduleEDD(int m, int n)
         {
+            //Ordinamento qui -> In ordine di DueDate:
+            jobs.Sort((x, y) => x.getDueDateTime().CompareTo(y.getDueDateTime()));
+            //a questo punto jobs è ordinato in base alla DueDate...
+
             List<int> schedule = new List<int>();
             int[] time = new int[m];
             int[] index = new int[m];
@@ -114,9 +127,11 @@ namespace ProgettoMMDS
                 schedule.Add(0);
             }
             int bestMac = 0;
+
             for (int i = 0; i < n; i++)
             {
                 Job j = jobs[i];
+
                 schedule.Insert(index[bestMac], j.getID());
                 for (int k = bestMac; k < m; k++)
                     index[k]++;
@@ -129,6 +144,8 @@ namespace ProgettoMMDS
                     }
                 }
             }
+            //Rimetto il vettore dei job in ordine
+            jobs.Sort((x, y) => x.getID().CompareTo(y.getID()));
             return schedule;
         }
         /// <summary>
