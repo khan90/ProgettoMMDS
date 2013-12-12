@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProgettoMMDS
@@ -12,10 +13,11 @@ namespace ProgettoMMDS
     class Scheduler
     {
         List<Job> jobs = new List<Job>();
-
+        static volatile bool fine = false;
+        static long MTIME = 10000;
+ 
         public void run(string[] args)
         {
-
 
             if (!(args.Length > 0))
             {
@@ -26,30 +28,74 @@ namespace ProgettoMMDS
             else
             {
                 FileManager fm = new FileManager(args[0]);
+                //INIZIO CONTEGGIO SECONDI
+                DateTime startTime = DateTime.Now;
                 jobs = (fm.getJobsList());
                 //Ordinamento qui -> In ordine di DueDate:
                 jobs.Sort((x, y) => x.getDueDateTime().CompareTo(y.getDueDateTime()));
                 //a questo punto jobs è ordinato in base alla DueDate...
+                /*
                 for (int i = 0; i < jobs.Count; i++)
                 {
                     Console.WriteLine(jobs[i].ToString());
-                }                
+                }
+                */
                 List<int> schedule = new List<int>(constructScheduleEDD(fm.getNumberofMachine(), fm.getNumberofJobs()));
-                /* //Stampa EDD
+                
+                /*//Stampa EDD
                 for (int i = 0; i < schedule.Count; i++)
                 {
                     Console.WriteLine(schedule[i].ToString());
                 }*/
                 //TODO: SearchSolution(); (la chiamata a DateTime.Now si potrebbe fare con un thread che non fa altro... pensiamoci!
-                //Stampa Lateness
+                schedule = SearchSolutionRandom(schedule);
+                //Stampa Tardiness
                 Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
 
+                //FINE CONTEGGIO SECONDI
+                DateTime stopTime = DateTime.Now;
+                TimeSpan elapsedTime = stopTime.Subtract(startTime);
+                Console.WriteLine("Arrivato in " + elapsedTime.TotalMilliseconds + " ms");
                 Console.ReadKey();
             }
         }
 
-        List<int> SearchSolution(List<int> schedule)
+        /// <summary>
+        /// Ricerca locale di un minimo efettuando swap Random tra gli elementi.
+        /// </summary>
+        /// <param name="schedule"></param>
+        /// <returns></returns>
+        List<int> SearchSolutionRandom(List<int> schedule)
         {
+            Random r = new Random();
+            int maxInt = schedule.Count();
+            int bestTardy = getTardiness(schedule);
+            Thread thread = new Thread(new ThreadStart(timer));
+            thread.Start();
+            List<int> currentSchedule = new List<int>(schedule);
+            while (!fine)
+            {                
+                int num1 = r.Next(maxInt);
+                int num2 = r.Next(maxInt);
+                if (num2 == num1)
+                    continue;
+                int temp = currentSchedule[num1];
+                currentSchedule[num1] = currentSchedule[num2];
+                currentSchedule[num2] = temp;
+                int currentTardy = getTardiness(currentSchedule);
+                if (currentTardy < bestTardy)
+                {
+                    bestTardy = currentTardy;
+                    schedule = new List<int>(currentSchedule);
+                }
+                else
+                {
+                    temp = currentSchedule[num1];
+                    currentSchedule[num1] = currentSchedule[num2];
+                    currentSchedule[num2] = temp;
+                }
+                
+            }
             return schedule;
         }
 
@@ -103,13 +149,20 @@ namespace ProgettoMMDS
                 {
                     Job j = jobs[i - 1]; 
                     time += j.getProcessingTime();
-                    if (time >= j.getDueDateTime())
+                    if (time > j.getDueDateTime())
                     {
                         tardiness += (time - j.getDueDateTime());
                     }
                 }
             }
             return (tardiness);
+        }
+
+        public static void timer()
+        {
+            //Console.WriteLine("Counter partito");
+            Thread.Sleep((int)MTIME);
+            fine = true;
         }
        
 
