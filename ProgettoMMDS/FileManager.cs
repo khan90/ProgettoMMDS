@@ -12,6 +12,10 @@ namespace ProgettoMMDS
         private int numberofJob;
         private int numberofMachine;
         private List<Job> jobsList;
+        private string _path;
+
+        private const string RISULTATI = "Risultati.txt";
+        private const string PROVE = "Prove.csv";
 
         /// <summary>
         /// Istanzia un  oggetto che estrae le informazioni dal file e genera il file di output !DA FARE
@@ -27,6 +31,7 @@ namespace ProgettoMMDS
             try
             {
                 String[] lines = System.IO.File.ReadAllLines(path);
+                _path = path;
 
                 //riga 3: macchine e jobs 
                 //N : numero di Jobs;
@@ -61,6 +66,70 @@ namespace ProgettoMMDS
                 Console.ReadKey();
                 Environment.Exit(0);
             }
+        }
+
+        public void OutputAll(List<int> schedule,int tardiness, double executionTime, string comment)
+        {
+            OutputProva(schedule, tardiness, executionTime, comment);
+            OutputResult(tardiness, executionTime);
+            OutputSolution(schedule);
+        }
+        /// <summary>
+        /// Crea un file txt con la soluzione
+        /// </summary>
+        /// <param name="schedule"></param>
+        public void OutputSolution(List<int> schedule)
+        {
+            string filename = _path.Substring(0, _path.Length - 4);
+            StreamWriter stream = System.IO.File.CreateText(filename + ".sol");
+            //  StreamWriter stream = System.IO.File.AppendText();
+            int mac=1;
+            stream.Write("M1\t");
+            for(int i=0;i<schedule.Count;i++)
+            {
+                if(schedule[i]==0)
+                {
+                    stream.Write("\r\nM"+ ++mac +"\t");
+                }
+                else
+                {
+                    stream.Write(schedule[i] + "\t");
+                }
+            }
+            stream.Close();
+        }
+        /// <summary>
+        /// Aggiunge al file Risultati.txt l'esecuzione
+        /// </summary>
+        /// <param name="tardiness">Valore della tardiness</param>
+        /// <param name="executionTime">Tempo di esecuzione</param>
+        public void OutputResult(int tardiness, double executionTime)
+        {
+            string filename = _path.Substring(0, _path.Length - 4);
+            StreamWriter stream = System.IO.File.AppendText(RISULTATI);
+            string output = filename + "\t" + tardiness + "\t" + executionTime;
+            stream.WriteLine(output);
+            stream.Close();
+        }
+        /// <summary>
+        /// Stampa il risultato dell'esecuzione sul file di prova
+        /// </summary>
+        /// <param name="schedule"></param>
+        /// <param name="tardiness"></param>
+        /// <param name="executionTime"></param>
+        /// <param name="comment"></param>
+        public void OutputProva(List<int> schedule,int tardiness, double executionTime, string comment)
+        {
+            string filename = _path.Substring(0, _path.Length - 4);
+            StreamWriter stream = System.IO.File.AppendText(PROVE);
+            string output = filename + ";" + tardiness + ";" + executionTime +";";
+            for(int i =0; i<schedule.Count;i++)
+            {
+                output += schedule[i] + " "; 
+            }
+            output += ";" + comment + ";" + DateTime.Now;
+            stream.WriteLine(output);
+            stream.Close();
         }
 
         public int getNumberofMachine()

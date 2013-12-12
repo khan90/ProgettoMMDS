@@ -33,14 +33,14 @@ namespace ProgettoMMDS
                 jobs = (fm.getJobsList());
 
                 
-                for (int i = 0; i < jobs.Count; i++)
+                /* for (int i = 0; i < jobs.Count; i++)
                 {
                     Console.WriteLine(jobs[i].ToString());
-                }
+                }*/
                 
                 List<int> schedule = new List<int>(constructScheduleEDD(fm.getNumberofMachine(), fm.getNumberofJobs()));
 
-                //*//Stampa EDD
+                /*//Stampa EDD
                 for (int i = 0; i < schedule.Count; i++)
                 {
                     Console.WriteLine(schedule[i].ToString());
@@ -54,11 +54,19 @@ namespace ProgettoMMDS
                 schedule = SearchSolutionRandom(schedule);
                 //Stampa Tardiness
                 Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
+                
 
                 //FINE CONTEGGIO SECONDI
-               /* DateTime stopTime = DateTime.Now;
+                DateTime stopTime = DateTime.Now;
                 TimeSpan elapsedTime = stopTime.Subtract(startTime);
-                Console.WriteLine("Arrivato in " + elapsedTime.TotalMilliseconds + " ms");*/
+                Console.WriteLine("Arrivato in " + elapsedTime.TotalMilliseconds + " ms");
+                
+                //OUTPUT
+
+                fm.OutputSolution(schedule);
+                fm.OutputResult(getTardiness(schedule), elapsedTime.TotalMilliseconds);
+                fm.OutputProva(schedule, getTardiness(schedule), elapsedTime.TotalMilliseconds, "Prova");
+               
                 Console.ReadKey();
             }
         }
