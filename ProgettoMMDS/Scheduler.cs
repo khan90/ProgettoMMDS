@@ -55,8 +55,8 @@ namespace ProgettoMMDS
 
                 Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
                 //*/
-
-                List<int> schedule = SearchSolutionRandom(fm.getNumberofMachine(), fm.getNumberofJobs());
+                //List<int> schedule = SearchSolutionRandom(fm.getNumberofMachine(), fm.getNumberofJobs());
+                List<int> schedule = SearchBestSolutionRandom(fm.getNumberofMachine(), fm.getNumberofJobs());
                 //Stampa Tardiness
                 Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
                 
@@ -79,7 +79,6 @@ namespace ProgettoMMDS
         /// <summary>
         /// Ricerca locale di un minimo effettuando swap Random tra gli elementi.
         /// </summary>
-        /// <param name="schedule"></param>
         /// <returns></returns>
         List<int> SearchSolutionRandom(int m, int n)
         {            
@@ -121,6 +120,58 @@ namespace ProgettoMMDS
                     currentSchedule[num2] = temp;
                 }
                 
+            }
+            return schedule;
+        }
+        /// <summary>
+        /// Questa è come la ricerca locale sopra ma sposta un elemento a caso nella migliore posizione.
+        /// Tra tutti gli spostamenti possibili di un elemento a caso prende quello che migliora di più la soluzione
+        /// </summary>
+        /// <param name="m">Numero di macchine</param>
+        /// <param name="n">Numero di Job</param>
+        /// <returns>Miglior schedule trovato</returns>
+        List<int> SearchBestSolutionRandom(int m, int n)
+        {
+            Thread thread = new Thread(new ThreadStart(timer));
+            thread.Start();
+            //Ho spostato questo qui nel metodo di scheduling (non è detto che tutti i metodi utilizzino EDD
+            //quindi metto questo qui dentro in modo che sia parte integrante del metodo)
+            Random r = new Random();
+            //soluzione migliore
+            List<int> schedule = new List<int>(constructScheduleEDD(m, n));
+            int maxInt = schedule.Count();
+            int bestTardy = getTardiness(schedule);
+            //soluzione corrente
+            List<int> currentSchedule = new List<int>(schedule);
+            while (!fine)
+            {
+                int num1 = r.Next(maxInt);
+                int num2;
+                for (num2 = 0; num2 < maxInt; num2++)
+                {
+                    if (num2 == num1)
+                        continue;
+                    //SWAP
+                    int temp = currentSchedule[num1];
+                    currentSchedule[num1] = currentSchedule[num2];
+                    currentSchedule[num2] = temp;
+                    int currentTardy = getTardiness(currentSchedule);
+                    if ((currentTardy < bestTardy))
+                    {
+                        bestTardy = currentTardy;
+                        schedule = new List<int>(currentSchedule);
+                    }
+                    else if (r.Next(10) < 2)            //Nel 20% dei casi effettuo lo swap anche se non mi conviene.
+                    {
+                        continue;
+                    }
+                    //UNSWAP
+                    temp = currentSchedule[num1];
+                    currentSchedule[num1] = currentSchedule[num2];
+                    currentSchedule[num2] = temp;
+                }
+                //alla fine di una iterazione aggiorno il currentSchedule
+                currentSchedule = new List<int>(schedule);
             }
             return schedule;
         }
