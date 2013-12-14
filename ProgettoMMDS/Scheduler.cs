@@ -10,14 +10,22 @@ namespace ProgettoMMDS
     /// <summary>
     /// Classe che effettua lo scheduling
     /// </summary>
-    class Scheduler
+    public class Scheduler
     {
+        /// <summary>
+        /// Lista dei Job in ordine di ID
+        /// </summary>
         List<Job> jobs = new List<Job>();
-        static volatile bool fine = false;
+        volatile static bool fine = false;
         static long MTIME = 10000;
- 
-        public void run(string[] args)
+
+        public Scheduler()
         {
+            fine = false;
+        }
+
+        public void run(string[] args)
+        {            
 
             if (!(args.Length > 0))
             {
@@ -28,17 +36,16 @@ namespace ProgettoMMDS
             else
             {
                 FileManager fm = new FileManager(args[0]);
-                //INIZIO CONTEGGIO SECONDI
-                DateTime startTime = DateTime.Now;
-                jobs = (fm.getJobsList());
-
-                
+                jobs = (fm.getJobsList());                
                 /* for (int i = 0; i < jobs.Count; i++)
                 {
                     Console.WriteLine(jobs[i].ToString());
                 }*/
-                
-                List<int> schedule = new List<int>(constructScheduleEDD(fm.getNumberofMachine(), fm.getNumberofJobs()));
+
+                //INIZIO CONTEGGIO SECONDI
+                DateTime startTime = DateTime.Now;
+
+                //List<int> schedule = new List<int>(constructScheduleEDD(fm.getNumberofMachine(), fm.getNumberofJobs()));
 
                 /*//Stampa EDD
                 for (int i = 0; i < schedule.Count; i++)
@@ -49,9 +56,7 @@ namespace ProgettoMMDS
                 Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
                 //*/
 
-
-                //TODO: SearchSolution(); (la chiamata a DateTime.Now si potrebbe fare con un thread che non fa altro... pensiamoci!
-                schedule = SearchSolutionRandom(schedule);
+                List<int> schedule = SearchSolutionRandom(fm.getNumberofMachine(), fm.getNumberofJobs());
                 //Stampa Tardiness
                 Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
                 
@@ -76,23 +81,32 @@ namespace ProgettoMMDS
         /// </summary>
         /// <param name="schedule"></param>
         /// <returns></returns>
-        List<int> SearchSolutionRandom(List<int> schedule)
-        {
-            Random r = new Random();
-            int maxInt = schedule.Count();
-            int bestTardy = getTardiness(schedule);
+        List<int> SearchSolutionRandom(int m, int n)
+        {            
             Thread thread = new Thread(new ThreadStart(timer));
             thread.Start();
-            List<int> currentSchedule = new List<int>(schedule);
+            //Ho spostato questo qui nel metodo di scheduling (non è detto che tutti i metodi utilizzino EDD
+            //quindi metto questo qui dentro in modo che sia parte integrante del metodo)
+            Random r = new Random();
+            //soluzione migliore
+            List<int> schedule = new List<int>(constructScheduleEDD(m, n));
+            int maxInt = schedule.Count(); //forse basta n+m
+            int bestTardy = getTardiness(schedule);
+            //soluzione corrente
+            List<int> currentSchedule = new List<int>(schedule);            
             while (!fine)
             {                
                 int num1 = r.Next(maxInt);
                 int num2 = r.Next(maxInt);
-                if (num2 == num1)
-                    continue;
+                while (num2 == num1)
+                {
+                    num2 = r.Next(maxInt);
+                } 
+                //SWAP   
                 int temp = currentSchedule[num1];
                 currentSchedule[num1] = currentSchedule[num2];
                 currentSchedule[num2] = temp;
+
                 int currentTardy = getTardiness(currentSchedule);
                 if (currentTardy < bestTardy)
                 {
@@ -101,6 +115,7 @@ namespace ProgettoMMDS
                 }
                 else
                 {
+                    //UNSWAP
                     temp = currentSchedule[num1];
                     currentSchedule[num1] = currentSchedule[num2];
                     currentSchedule[num2] = temp;
@@ -116,11 +131,13 @@ namespace ProgettoMMDS
         /// <param name="m">Numero Macchine</param>
         /// <param name="n">Numero Job</param>
         /// <returns></returns>
-        public List<int> constructScheduleEDD(int m, int n)
+        List<int> constructScheduleEDD(int m, int n)
         {
+            //Ho creato qui una nuova lista temporanea -> la lista jobs non viene toccata.
+            List<Job> tempJobs = new List<Job>(jobs);
             //Ordinamento qui -> In ordine di DueDate:
-            jobs.Sort((x, y) => x.getDueDateTime().CompareTo(y.getDueDateTime()));
-            //a questo punto jobs è ordinato in base alla DueDate...
+            tempJobs.Sort((x, y) => x.getDueDateTime().CompareTo(y.getDueDateTime()));
+            //a questo punto tempJobs è ordinato in base alla DueDate...
 
             List<int> schedule = new List<int>();
             int[] time = new int[m];
@@ -135,7 +152,6 @@ namespace ProgettoMMDS
                 schedule.Add(0);
             }
             int bestMac = 0;
-
             for (int i = 0; i < n; i++)
             {
                 Job j = jobs[i];
@@ -153,7 +169,7 @@ namespace ProgettoMMDS
                 }
             }
             //Rimetto il vettore dei job in ordine
-            jobs.Sort((x, y) => x.getID().CompareTo(y.getID()));
+            //jobs.Sort((x, y) => x.getID().CompareTo(y.getID()));
             return schedule;
         }
         /// <summary>
@@ -161,7 +177,7 @@ namespace ProgettoMMDS
         /// </summary>
         /// <param name="schedule">schedule di cui si vuole calcolare la Tardiness totale</param>
         /// <returns>Tardiness totale</returns>
-        public int getTardiness(List<int> schedule)
+        int getTardiness(List<int> schedule)
         {
             int time = 0;
             int tardiness = 0;
@@ -183,7 +199,7 @@ namespace ProgettoMMDS
             return (tardiness);
         }
 
-        public static void timer()
+        void timer()
         {
             //Console.WriteLine("Counter partito");
             Thread.Sleep((int)MTIME);
