@@ -142,9 +142,13 @@ namespace ProgettoMMDS
             int maxInt = schedule.Count();
             int bestTardy = getTardiness(schedule);
             //soluzione corrente
-            List<int> currentSchedule = new List<int>(schedule);
+            List<int> currentSchedule = new List<int>(schedule);          
+            int currentTardy = int.MaxValue;
+            int improvment = int.MaxValue;
+            int i = 0;
             while (!fine)
             {
+                i++;
                 int num1 = r.Next(maxInt);
                 int num2;
                 for (num2 = 0; num2 < maxInt; num2++)
@@ -155,14 +159,17 @@ namespace ProgettoMMDS
                     int temp = currentSchedule[num1];
                     currentSchedule[num1] = currentSchedule[num2];
                     currentSchedule[num2] = temp;
-                    int currentTardy = getTardiness(currentSchedule);
+                    currentTardy = getTardiness(currentSchedule);
                     if ((currentTardy < bestTardy))
                     {
+                        improvment = bestTardy - currentTardy;
                         bestTardy = currentTardy;
                         schedule = new List<int>(currentSchedule);
                     }
                     else if (r.Next(10) < 2)            //Nel 20% dei casi effettuo lo swap anche se non mi conviene.
                     {
+                        num1 = num2;        //Piccola modifica
+                        //IDEA: Qui si può aggiungere una piccola tabù list per evitare che ritorni indietro al passo successivo
                         continue;
                     }
                     //UNSWAP
