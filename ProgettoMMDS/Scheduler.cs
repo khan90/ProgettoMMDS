@@ -136,21 +136,43 @@ namespace ProgettoMMDS
             thread.Start();
             //Ho spostato questo qui nel metodo di scheduling (non è detto che tutti i metodi utilizzino EDD
             //quindi metto questo qui dentro in modo che sia parte integrante del metodo)
-            Random r = new Random();
+            
             //soluzione migliore
             List<int> schedule = new List<int>(constructScheduleEDD(m, n));
+            return (LocalSearchBestInsert(schedule));
+        }
+
+
+        List<int> LocalSearchBestInsert(List<int> schedule)
+        {
+            int tabuCapacity = 15;
+            Random r = new Random();
             int maxInt = schedule.Count();
             int bestTardy = getTardiness(schedule);
             //soluzione corrente
-            List<int> currentSchedule = new List<int>(schedule);          
+            List<int> currentSchedule = new List<int>(schedule);
             int currentTardy = int.MaxValue;
             int improvment = int.MaxValue;
             int i = 0;
-            while (!fine)
-            {
+            //Tabu list
+            int[] tabuList = new int[tabuCapacity];
+            int tabuIndex = 0;
+            //while (!fine)
+            while ((improvment > 10) || (i < 500))
+            {                
                 i++;
+                improvment = 0;
                 int num1 = r.Next(maxInt);
-                int num2;
+                for (int j = 0; j < tabuCapacity; j++)
+                {
+                    if (num1 == tabuList[j])
+                    {
+                        j = 0;
+                        num1 = r.Next(maxInt);
+                        Console.WriteLine("ciao");
+                    }
+                }              
+                int num2;                
                 for (num2 = 0; num2 < maxInt; num2++)
                 {
                     if (num2 == num1)
@@ -168,7 +190,7 @@ namespace ProgettoMMDS
                     }
                     else if (r.Next(10) < 2)            //Nel 20% dei casi effettuo lo swap anche se non mi conviene.
                     {
-                        num1 = num2;        //Piccola modifica
+                        //num1 = num2;        //Piccola modifica
                         //IDEA: Qui si può aggiungere una piccola tabù list per evitare che ritorni indietro al passo successivo
                         continue;
                     }
@@ -179,7 +201,15 @@ namespace ProgettoMMDS
                 }
                 //alla fine di una iterazione aggiorno il currentSchedule
                 currentSchedule = new List<int>(schedule);
+                if (improvment == 0)
+                {
+                    tabuList[tabuIndex] = num1;
+                    tabuIndex = (tabuIndex + 1) % tabuCapacity;
+                }
+                Console.WriteLine(i + " " + improvment);
             }
+            foreach(int j in tabuList)
+                Console.WriteLine(j);
             return schedule;
         }
 
@@ -260,7 +290,7 @@ namespace ProgettoMMDS
         void timer()
         {
             //Console.WriteLine("Counter partito");
-            Thread.Sleep((int)MTIME);
+            //Thread.Sleep((int)MTIME);
             fine = true;
         }
        
