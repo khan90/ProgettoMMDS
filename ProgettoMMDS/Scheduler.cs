@@ -17,7 +17,7 @@ namespace ProgettoMMDS
         /// </summary>
         List<Job> jobs = new List<Job>();
         volatile static bool fine = false;
-        static long MTIME = 10000;
+        static long MTIME = 1000;
 
         public Scheduler()
         {
@@ -41,7 +41,7 @@ namespace ProgettoMMDS
                 DateTime startTime = DateTime.Now;
 
                 //QUI l'algoritmo di ricerca del minimo ->
-                Schedule schedule = SearchBestSolutionRandom(fm.getNumberofMachine(), fm.getNumberofJobs());               
+                Schedule schedule = SearchSolutionMultistart(fm.getNumberofMachine(), fm.getNumberofJobs());               
 
                 //FINE CONTEGGIO SECONDI
                 DateTime stopTime = DateTime.Now;
@@ -58,14 +58,13 @@ namespace ProgettoMMDS
             }
         }
         /// <summary>
-        /// Questa è come la ricerca locale sopra ma sposta un elemento a caso nella migliore posizione.
-        /// Tra tutti gli spostamenti possibili di un elemento a caso prende quello che migliora di più la soluzione
+        /// Ricerca Locale multistart
         /// Multistart
         /// </summary>
         /// <param name="m">Numero di macchine</param>
         /// <param name="n">Numero di Job</param>
         /// <returns>Miglior schedule trovato</returns>
-        Schedule SearchBestSolutionRandom(int m, int n)
+        Schedule SearchSolutionMultistart(int m, int n)
         {
             Thread thread = new Thread(new ThreadStart(timer));
             thread.Start();
@@ -79,9 +78,11 @@ namespace ProgettoMMDS
             {
                 currentSchedule = new Schedule(LocalSearchBestInsert(currentSchedule));
                 j++;
-                if (currentSchedule.getTardiness() < bestTardiness)
+                int currentTardiness = currentSchedule.getTardiness(); 
+                if (currentTardiness < bestTardiness)
                 {
                     schedule = new Schedule(currentSchedule);
+                    bestTardiness = currentTardiness;
                 }
                 Random r = new Random();
                 for (int i = 0; i < schedule.Count(); i++)
@@ -100,7 +101,12 @@ namespace ProgettoMMDS
             return (schedule);
         }
 
-
+        /// <summary>
+        /// Algoritmo di ricerca locale che sposta un elemento a caso nella migliore posizione.
+        /// Tra tutti gli spostamenti possibili di un elemento scelto a caso prende quello che migliora di più la soluzione
+        /// </summary>
+        /// <param name="schedule"></param>
+        /// <returns></returns>
         Schedule LocalSearchBestInsert(Schedule schedule)
         {
             //Variabili dell'algoritmo
@@ -157,7 +163,7 @@ namespace ProgettoMMDS
                         bestTardy = currentTardy;
                         schedule = new Schedule(currentSchedule);
                     }
-                    else if (r.NextDouble()*10 < 0.5)            //Nel 20% dei casi effettuo lo swap anche se non mi conviene.
+                    else if (r.Next(100) < 5)            //Ogni tanto effettuo uno swap anche se non mi miglioro, ma non salvo la soluzione
                     {
                         //num1 = num2;        //Piccola modifica
                         //IDEA: Qui si può aggiungere una piccola tabù list per evitare che ritorni indietro al passo successivo
