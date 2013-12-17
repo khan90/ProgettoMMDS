@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ProgettoMMDS
 {
-    class Job
+    public class Job
     {
         private int id;
         private int processingtime;
