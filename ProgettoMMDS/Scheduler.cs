@@ -145,7 +145,7 @@ namespace ProgettoMMDS
 
         List<int> LocalSearchBestInsert(List<int> schedule)
         {
-            int tabuCapacity = 15;
+            int tabuCapacity = 5;
             Random r = new Random();
             int maxInt = schedule.Count();
             int bestTardy = getTardiness(schedule);
@@ -158,7 +158,7 @@ namespace ProgettoMMDS
             int[] tabuList = new int[tabuCapacity];
             int tabuIndex = 0;
             //while (!fine)
-            while ((improvment > 10) || (i < 500))
+            while ((improvment > 10) || (i < 200))
             {                
                 i++;
                 improvment = 0;
