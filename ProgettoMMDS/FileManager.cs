@@ -13,6 +13,7 @@ namespace ProgettoMMDS
         private int numberofMachine;
         private List<Job> jobsList;
         private string _path;
+        private int maxProc;
 
         private const string RISULTATI = "Risultati.txt";
         private const string PROVE = "Prove.csv";
@@ -23,7 +24,7 @@ namespace ProgettoMMDS
         /// <param name="path">Percorso e nome del file</param>
         public FileManager(string path) 
         {
-
+            maxProc = 0;
             //Apro il file e leggo ogni stringa
 #if (DEBUG)
             System.Console.WriteLine("Apertura File "+ path);
@@ -52,6 +53,8 @@ namespace ProgettoMMDS
                     token = lines[i].Split(charSeparators, StringSplitOptions.RemoveEmptyEntries);
                     int id = Convert.ToInt32(token[0]);
                     int pt = Convert.ToInt32(token[1]);
+                    if (pt > maxProc)
+                        maxProc = pt;
                     int dd = Convert.ToInt32(token[2]);
                     jobsList.Add(new Job(id,pt, dd));
 
@@ -143,6 +146,11 @@ namespace ProgettoMMDS
         public List<Job> getJobsList()
         {
             return jobsList;
+        }
+
+        public int getMaxProcessingTime()
+        {
+            return maxProc;
         }
     }
 }

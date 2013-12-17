@@ -55,11 +55,40 @@ namespace ProgettoMMDS
 
                 Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
                 //*/
+
+                jobs.Add(new Job(fm.getNumberofJobs() + 1, fm.getMaxProcessingTime()+50, 0));
+                List<PartialSolution> pool = new List<PartialSolution>();
+                int lunghezza = fm.getNumberofJobs() + fm.getNumberofMachine();
+                int dummy = fm.getNumberofJobs() + 1;
+                for (int k = 0; k <5; k++)
+                {
+                    for (int j = 0; j < lunghezza; j++)
+                    {
+                        for (int i = 0; i < fm.getNumberofJobs()+1; i++)
+                        {
+                            PartialSolution ps = new PartialSolution(i, dummy, j, lunghezza);
+                            ps.Tardiness = getTardiness(ps.getSchedule());
+                            pool.Add(ps);
+                            
+                        }
+                    } 
+                }
+                
+
+              /* for (int i = 0; i < pool.Count; i++)
+                {
+                    Console.WriteLine(pool[i].toString());
+                }*/
+                
+                /*
+                
+                
+                
                 //List<int> schedule = SearchSolutionRandom(fm.getNumberofMachine(), fm.getNumberofJobs());
                 List<int> schedule = SearchBestSolutionRandom(fm.getNumberofMachine(), fm.getNumberofJobs());
                 //Stampa Tardiness
                 Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
-                
+                */
 
                 //FINE CONTEGGIO SECONDI
                 DateTime stopTime = DateTime.Now;
@@ -67,11 +96,11 @@ namespace ProgettoMMDS
                 Console.WriteLine("Arrivato in " + elapsedTime.TotalMilliseconds + " ms");
                 
                 //OUTPUT
-
+                /*
                 fm.OutputSolution(schedule);
                 fm.OutputResult(getTardiness(schedule), elapsedTime.TotalMilliseconds);
                 fm.OutputProva(schedule, getTardiness(schedule), elapsedTime.TotalMilliseconds, "Prova");
-               
+               */
                 Console.ReadKey();
             }
         }
