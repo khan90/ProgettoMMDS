@@ -14,7 +14,7 @@ namespace ProgettoMMDS
         static void Main(string[] args)
         {
             Scheduler scheduler = new Scheduler();
-            scheduler.run(args);            
+            scheduler.run(args);         
         }
        
     }

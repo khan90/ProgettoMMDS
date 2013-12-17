@@ -36,42 +36,24 @@ namespace ProgettoMMDS
             else
             {
                 FileManager fm = new FileManager(args[0]);
-                jobs = (fm.getJobsList());                
-                /* for (int i = 0; i < jobs.Count; i++)
-                {
-                    Console.WriteLine(jobs[i].ToString());
-                }*/
-
+                jobs = (fm.getJobsList());
                 //INIZIO CONTEGGIO SECONDI
                 DateTime startTime = DateTime.Now;
 
-                //List<int> schedule = new List<int>(constructScheduleEDD(fm.getNumberofMachine(), fm.getNumberofJobs()));
-
-                /*//Stampa EDD
-                for (int i = 0; i < schedule.Count; i++)
-                {
-                    Console.WriteLine(schedule[i].ToString());
-                }
-
-                Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
-                //*/
-                //List<int> schedule = SearchSolutionRandom(fm.getNumberofMachine(), fm.getNumberofJobs());
-                List<int> schedule = SearchBestSolutionRandom(fm.getNumberofMachine(), fm.getNumberofJobs());
-                //Stampa Tardiness
-                Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
-                
+                //QUI l'algoritmo di ricerca del minimo ->
+                List<int> schedule = SearchBestSolutionRandom(fm.getNumberofMachine(), fm.getNumberofJobs());               
 
                 //FINE CONTEGGIO SECONDI
                 DateTime stopTime = DateTime.Now;
                 TimeSpan elapsedTime = stopTime.Subtract(startTime);
+                //Stampa Tardiness e tempo totale
+                Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
                 Console.WriteLine("Arrivato in " + elapsedTime.TotalMilliseconds + " ms");
                 
                 //OUTPUT
-
                 fm.OutputSolution(schedule);
                 fm.OutputResult(getTardiness(schedule), elapsedTime.TotalMilliseconds);
-                fm.OutputProva(schedule, getTardiness(schedule), elapsedTime.TotalMilliseconds, "Prova");
-               
+                fm.OutputProva(schedule, getTardiness(schedule), elapsedTime.TotalMilliseconds, "Prova");               
                 Console.ReadKey();
             }
         }
@@ -126,6 +108,7 @@ namespace ProgettoMMDS
         /// <summary>
         /// Questa è come la ricerca locale sopra ma sposta un elemento a caso nella migliore posizione.
         /// Tra tutti gli spostamenti possibili di un elemento a caso prende quello che migliora di più la soluzione
+        /// Multistart
         /// </summary>
         /// <param name="m">Numero di macchine</param>
         /// <param name="n">Numero di Job</param>
@@ -134,31 +117,61 @@ namespace ProgettoMMDS
         {
             Thread thread = new Thread(new ThreadStart(timer));
             thread.Start();
-            //Ho spostato questo qui nel metodo di scheduling (non è detto che tutti i metodi utilizzino EDD
-            //quindi metto questo qui dentro in modo che sia parte integrante del metodo)
-            
-            //soluzione migliore
+            //soluzione migliore -> Il metodo per ora fa solo una ricerca locale a partire dall'EDD
             List<int> schedule = new List<int>(constructScheduleEDD(m, n));
-            return (LocalSearchBestInsert(schedule));
+            int bestTardiness = getTardiness(schedule);
+            List<int> currentSchedule = new List<int>(schedule);
+            int j = 0;
+            while (!fine)
+            {
+                currentSchedule = new List<int>(LocalSearchBestInsert(currentSchedule));
+                j++;
+                if (getTardiness(currentSchedule) < bestTardiness)
+                {
+                    schedule = new List<int>(currentSchedule);
+                }
+                Random r = new Random();
+                for (int i = 0; i < schedule.Count(); i++)
+                {
+                    int num1 = r.Next(schedule.Count());
+                    int num2 = r.Next(schedule.Count());
+                    if ((num1 == num2)||(0 == currentSchedule[num1])||(0 == currentSchedule[num2]))
+                    {
+                        i--;
+                        continue;
+                    }
+                    int temp = currentSchedule[num1];
+                    currentSchedule[num1] = currentSchedule[num2];
+                    currentSchedule[num2] = temp;
+                }
+            }
+            Console.WriteLine(j);
+            return (schedule);
         }
 
 
         List<int> LocalSearchBestInsert(List<int> schedule)
         {
-            int tabuCapacity = 5;
+            //Variabili dell'algoritmo
+            int maxIterations = 150;
+            int minImprovment = 1;
+            int tabuCapacity = 3;
+            //Inizializzazione
             Random r = new Random();
             int maxInt = schedule.Count();
             int bestTardy = getTardiness(schedule);
             //soluzione corrente
             List<int> currentSchedule = new List<int>(schedule);
             int currentTardy = int.MaxValue;
+            //miglioramento
             int improvment = int.MaxValue;
+            //numero di iterazioni
             int i = 0;
             //Tabu list
             int[] tabuList = new int[tabuCapacity];
             int tabuIndex = 0;
-            //while (!fine)
-            while ((improvment > 10) || (i < 200))
+            
+            while ((improvment > minImprovment) || (i < maxIterations))
             {                
                 i++;
                 improvment = 0;
@@ -169,9 +182,14 @@ namespace ProgettoMMDS
                     {
                         j = 0;
                         num1 = r.Next(maxInt);
-                        Console.WriteLine("ciao");
+                        //DA CANCELLARE STAMPA
+                        //Console.WriteLine("Non posso spostare questo elemento");
                     }
-                }              
+                }
+                // QUi aggiungo l'elemento che ho appena spostato alla tabù List
+                tabuList[tabuIndex] = num1;
+                tabuIndex = (tabuIndex + 1) % tabuCapacity;
+
                 int num2;                
                 for (num2 = 0; num2 < maxInt; num2++)
                 {
@@ -181,6 +199,7 @@ namespace ProgettoMMDS
                     int temp = currentSchedule[num1];
                     currentSchedule[num1] = currentSchedule[num2];
                     currentSchedule[num2] = temp;
+                    
                     currentTardy = getTardiness(currentSchedule);
                     if ((currentTardy < bestTardy))
                     {
@@ -188,10 +207,11 @@ namespace ProgettoMMDS
                         bestTardy = currentTardy;
                         schedule = new List<int>(currentSchedule);
                     }
-                    else if (r.Next(10) < 2)            //Nel 20% dei casi effettuo lo swap anche se non mi conviene.
+                    else if (r.NextDouble()*10 < 0.5)            //Nel 20% dei casi effettuo lo swap anche se non mi conviene.
                     {
                         //num1 = num2;        //Piccola modifica
                         //IDEA: Qui si può aggiungere una piccola tabù list per evitare che ritorni indietro al passo successivo
+                        //Console.Write("*");
                         continue;
                     }
                     //UNSWAP
@@ -201,15 +221,10 @@ namespace ProgettoMMDS
                 }
                 //alla fine di una iterazione aggiorno il currentSchedule
                 currentSchedule = new List<int>(schedule);
-                if (improvment == 0)
-                {
-                    tabuList[tabuIndex] = num1;
-                    tabuIndex = (tabuIndex + 1) % tabuCapacity;
-                }
-                Console.WriteLine(i + " " + improvment);
+                
+                //DA CANCELLARE STAMPA:
+                //Console.WriteLine("\t" + i + " " + improvment);
             }
-            foreach(int j in tabuList)
-                Console.WriteLine(j);
             return schedule;
         }
 
@@ -260,6 +275,8 @@ namespace ProgettoMMDS
             //jobs.Sort((x, y) => x.getID().CompareTo(y.getID()));
             return schedule;
         }
+
+
         /// <summary>
         /// Funzione che calcola la Tardiness totale di uno schedule dato
         /// </summary>
@@ -287,10 +304,11 @@ namespace ProgettoMMDS
             return (tardiness);
         }
 
+
         void timer()
         {
             //Console.WriteLine("Counter partito");
-            //Thread.Sleep((int)MTIME);
+            Thread.Sleep((int)MTIME);
             fine = true;
         }
        
