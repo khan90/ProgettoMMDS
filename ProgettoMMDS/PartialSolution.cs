@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,20 @@ namespace ProgettoMMDS
     class PartialSolution
     {
         List<int> schedule;
-        bool[] mask;
+        BitArray _mask;
+        int _dummy;
+        public BitArray Mask
+        {
+            get
+            {
+                return _mask;
+            }
+            set
+            {
+                _mask = value;
+            }
+        }
+      
         int _tardiness;
         public int Tardiness
         {
@@ -22,16 +36,29 @@ namespace ProgettoMMDS
                 _tardiness = value;
             }
         }
-
+        /// <summary>
+        /// Restituisce lo schedule della PartialSolution
+        /// </summary>
+        /// <returns><see cref="List"/></returns>
         public List<int> getSchedule()
         {
             return schedule;
         }
+
+        /// <summary>
+        /// Crea una partial solution con un unico job o unica macchina
+        /// </summary>
+        /// <param name="idJob">Identificativo Job</param>
+        /// <param name="dummy">Identificativo Job Dummy</param>
+        /// <param name="posizione">Posizione in cui inserire il job nello schedule</param>
+        /// <param name="lunghezza">Lunghezza dello schedule</param>
         public PartialSolution(int idJob,int dummy, int posizione, int lunghezza)
         {
+            _dummy = dummy;
             schedule = new List<int>();
-            mask = new bool[lunghezza];
-            mask[posizione]=true;
+            _mask = new BitArray(lunghezza);
+            _mask=_mask.Not();
+            _mask.Set(posizione,false); // 0 se ho un job
             for (int i = 0; i < lunghezza; i++)
 			{
                 if(i==posizione)
@@ -41,9 +68,27 @@ namespace ProgettoMMDS
 			}
         }
 
+        public void mergeSolution(PartialSolution ps)
+        {
+            if(ps._mask.Or(_mask) ==(new  BitArray(_mask.Count))) //se or mi da risultato zero posso fare la fusione
+            {
+                List<int> lista = ps.getSchedule();
+                for (int i = 0; i < _mask.Count; i++)
+                {
+                    if(lista[i] != _dummy)
+                    {
+                        schedule[i] = lista[i];
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Fusione non possibile");
+            }
+        }
 
  
-        public String toString()
+        public String ToString()
         {
             String ret = "|";
             for (int i = 0; i < schedule.Count; i++)

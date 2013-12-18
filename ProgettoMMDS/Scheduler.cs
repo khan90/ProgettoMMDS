@@ -74,11 +74,13 @@ namespace ProgettoMMDS
                     } 
                 }
                 
-
-              /* for (int i = 0; i < pool.Count; i++)
+                //*
+                for (int i = 0; i < pool.Count; i++)
                 {
-                    Console.WriteLine(pool[i].toString());
-                }*/
+                   // Console.WriteLine(pool[i].ToString());
+                    Console.WriteLine(pool[i].Tardiness);
+                }
+                //*/
                 
                 /*
                 
