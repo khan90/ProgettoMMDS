@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProgettoMMDS
@@ -9,9 +10,6 @@ namespace ProgettoMMDS
     class GreedyAntsScheduler : AbstractScheduler
     {
         Schedule schedule;
-        //soglia per sfruttamento-esplorazione
-        int soglia = 70;
-
         /// <summary>
         /// Matrice con la traccia di ferormone
         /// Il primo indice (righe) rappresenta il job
@@ -54,7 +52,8 @@ namespace ProgettoMMDS
 
         private Schedule greedyAnts(int m, int n)
         {
-            
+            Thread thread = new Thread(new ThreadStart(timer));
+            thread.Start();
             schedule = new Schedule(jobs);
             schedule.constructScheduleEDD(m, n);
             //Inizializzazione matrice delle traccie
@@ -72,6 +71,15 @@ namespace ProgettoMMDS
                 iteration++;
                 constructGreedysolutions(iteration);
             }
+            
+            for (int i = 0; i < schedule.Count(); i++)
+            {
+                for (int j = 0; j < schedule.Count(); j++)
+                {
+                    Console.Write((int)traceMatrix[i, j] + " ");
+                }
+                Console.Write("\n");
+            }
             return schedule;
         }
 
@@ -79,35 +87,33 @@ namespace ProgettoMMDS
         {
             //NUMERO DI FORMICHE
             int ants = 10;
-            double alfa = 2.0;
+            double alfa = 0.7;
+            int bestTardiness = schedule.getTardiness();
             Stack<Schedule> solutionList = new Stack<Schedule>();
             //faccio partire le formiche
             for (int j = 0; j < ants; j++)
             {
                 solutionList.Push(antRun(iteration));
             }
-            int bestTardiness = schedule.getTardiness();
             
             //EVAPORAZIONE
             for (int i = 0; i < schedule.Count(); i++)
             {
                 for (int j = 0; j < schedule.Count(); j++)
                 {
-                    traceMatrix[i, j] *= (1 - alfa);
+                    traceMatrix[i, j] *= alfa;
                 }
             }
+            //Console.WriteLine(solutionList.Count());
             while (solutionList.Count != 0)
             {
                 Schedule currentSchedule = solutionList.Pop();
                 int currentTardiness = currentSchedule.getTardiness();
+
                 if (currentTardiness < bestTardiness)
                 {
                     schedule = new Schedule(currentSchedule);
-                    if (currentTardiness < bestTardiness)
-                    {
-                        schedule = new Schedule(currentSchedule);
-                        bestTardiness = currentTardiness;
-                    }
+                    bestTardiness = currentTardiness;                    
                 }
                 //Se la tardiness è zero ritorno, ho trovato l'ottimo.
                 if (0 == currentTardiness)
@@ -116,10 +122,11 @@ namespace ProgettoMMDS
                     return;                    
                 }
                 //AGGIORNAMENTO TRACCIA
-                for (int i = 0; i < schedule.Count(); i++)
+                //Console.WriteLine(bestTardiness +" "+ currentTardiness);
+                for (int i = 0; i < currentSchedule.Count(); i++)
                 {
-                    int elemento = schedule.schedule[i];
-                    traceMatrix[elemento, i] += (1 / currentTardiness)*100;
+                    int elemento = currentSchedule.schedule[i];                   
+                    traceMatrix[elemento, i] += (traceMatrix[elemento,i] * bestTardiness/currentTardiness);                    
                     if (traceMatrix[elemento, i] > 100)
                     {
                         traceMatrix[elemento, i] = 100;
@@ -130,8 +137,10 @@ namespace ProgettoMMDS
 
         private Schedule antRun(int iteration)
         {
+            iteration /= 2;
             Random r = new Random();
             int choice = r.Next(100);
+            int soglia = 70;
             //Lista dei job candidati da inserire nello schedule
             Schedule candidateList = new Schedule(schedule);
             //Schedule parziale
@@ -141,12 +150,15 @@ namespace ProgettoMMDS
                 if (choice < soglia)
                 {
                     //SFRUTTAMENTO -> Seguo il ferormone e prendo quello che ha il valore più alto
-                    int maxValue = 0;
+                    double maxValue = -1.0;
                     int bestJob = 0;
                     for (int j = 0; j < candidateList.Count(); j++)
                     {
                         if (traceMatrix[j, i] > maxValue)
+                        {
                             bestJob = j;
+                            maxValue = traceMatrix[j, i];
+                        }
                     }
                     partialSchedule.Add(candidateList.schedule[bestJob]);
                     candidateList.schedule.RemoveAt(bestJob);
@@ -154,13 +166,16 @@ namespace ProgettoMMDS
                 else
                 {
                     //ESPLORAZIONE -> Idea: Effettuo una GRASP
-                    int index = r.Next(candidateList.Count());
-                    index %= iteration;
+                    int maxIndex = iteration;
+                    if (iteration >= candidateList.Count()){
+                        maxIndex = candidateList.Count() - 1;
+                    }
+                    int index = r.Next(maxIndex);
                     partialSchedule.Add(candidateList.schedule[index]);
                     candidateList.schedule.RemoveAt(index);
                 }
-            }            
-            return partialSchedule;
+            }
+            return LocalSearchBestInsert(LocalSearchBestInsert(partialSchedule));
         }
     }
 }

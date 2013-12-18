@@ -13,8 +13,9 @@ namespace ProgettoMMDS
         static List<Job> jobs = new List<Job>();
         static void Main(string[] args)
         {
-            Scheduler scheduler = new Scheduler();
-            scheduler.run(args);         
+            //Scheduler scheduler = new Scheduler();
+            AbstractScheduler scheduler = new GreedyAntsScheduler();
+            scheduler.run(args);
         }
        
     }

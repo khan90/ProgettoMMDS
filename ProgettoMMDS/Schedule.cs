@@ -33,7 +33,7 @@ namespace ProgettoMMDS
         public Schedule(List<Job> arg1)
         {
             _jobs = new List<Job>(arg1);
-            _schedule = null;
+            _schedule = new List<int>();
         }
         public Schedule(Schedule scheduleToCopy)
         {
