@@ -126,5 +126,13 @@ namespace ProgettoMMDS
             _schedule[num1] = _schedule[num2];
             _schedule[num2] = temp;
         }
+        /// <summary>
+        /// Aggiunge un job alla fine dello schedule
+        /// </summary>
+        /// <param name="job">job da aggiungere</param>
+        public void Add(int job)
+        {
+            _schedule.Add(job);
+        }
     }
 }

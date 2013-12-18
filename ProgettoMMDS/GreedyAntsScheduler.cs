@@ -8,12 +8,16 @@ namespace ProgettoMMDS
 {
     class GreedyAntsScheduler : AbstractScheduler
     {
-        List<Job> jobs = new List<Job>();
-        volatile static bool fine = false;
-        static long MTIME = 1000;
         Schedule schedule;
+        //soglia per sfruttamento-esplorazione
+        int soglia = 70;
 
-        //Matrice della traccia di ferormoni:
+        /// <summary>
+        /// Matrice con la traccia di ferormone
+        /// Il primo indice (righe) rappresenta il job
+        /// Il secondo indice rappresenta lo stadio
+        /// traceMatrix[j,i] = job J preso in posizione i
+        /// </summary>
         double[,] traceMatrix;
 
         public override void run(string[] args)
@@ -50,6 +54,7 @@ namespace ProgettoMMDS
 
         private Schedule greedyAnts(int m, int n)
         {
+            
             schedule = new Schedule(jobs);
             schedule.constructScheduleEDD(m, n);
             //Inizializzazione matrice delle traccie
@@ -64,42 +69,98 @@ namespace ProgettoMMDS
             int iteration = 0;
             while (!fine)
             {
+                iteration++;
                 constructGreedysolutions(iteration);
             }
             return schedule;
         }
 
-        private void constructGreedysolutions(int i)
+        private void constructGreedysolutions(int iteration)
         {
             //NUMERO DI FORMICHE
             int ants = 10;
+            double alfa = 2.0;
             Stack<Schedule> solutionList = new Stack<Schedule>();
             //faccio partire le formiche
             for (int j = 0; j < ants; j++)
             {
-                solutionList.Push(antRun(i));
+                solutionList.Push(antRun(iteration));
             }
             int bestTardiness = schedule.getTardiness();
             
+            //EVAPORAZIONE
+            for (int i = 0; i < schedule.Count(); i++)
+            {
+                for (int j = 0; j < schedule.Count(); j++)
+                {
+                    traceMatrix[i, j] *= (1 - alfa);
+                }
+            }
             while (solutionList.Count != 0)
             {
                 Schedule currentSchedule = solutionList.Pop();
-                if (currentSchedule.getTardiness() < bestTardiness)
+                int currentTardiness = currentSchedule.getTardiness();
+                if (currentTardiness < bestTardiness)
                 {
                     schedule = new Schedule(currentSchedule);
-                    int currentTardiness = currentSchedule.getTardiness();
                     if (currentTardiness < bestTardiness)
                     {
                         schedule = new Schedule(currentSchedule);
                         bestTardiness = currentTardiness;
                     }
                 }
-            }            
+                //Se la tardiness è zero ritorno, ho trovato l'ottimo.
+                if (0 == currentTardiness)
+                {
+                    fine = true;
+                    return;                    
+                }
+                //AGGIORNAMENTO TRACCIA
+                for (int i = 0; i < schedule.Count(); i++)
+                {
+                    int elemento = schedule.schedule[i];
+                    traceMatrix[elemento, i] += (1 / currentTardiness)*100;
+                    if (traceMatrix[elemento, i] > 100)
+                    {
+                        traceMatrix[elemento, i] = 100;
+                    }
+                }
+            }    
         }
 
-        private Schedule antRun(int i)
+        private Schedule antRun(int iteration)
         {
-            throw new NotImplementedException();
+            Random r = new Random();
+            int choice = r.Next(100);
+            //Lista dei job candidati da inserire nello schedule
+            Schedule candidateList = new Schedule(schedule);
+            //Schedule parziale
+            Schedule partialSchedule = new Schedule(jobs);
+            for (int i = 0; i < schedule.Count(); i++)
+            {
+                if (choice < soglia)
+                {
+                    //SFRUTTAMENTO -> Seguo il ferormone e prendo quello che ha il valore più alto
+                    int maxValue = 0;
+                    int bestJob = 0;
+                    for (int j = 0; j < candidateList.Count(); j++)
+                    {
+                        if (traceMatrix[j, i] > maxValue)
+                            bestJob = j;
+                    }
+                    partialSchedule.Add(candidateList.schedule[bestJob]);
+                    candidateList.schedule.RemoveAt(bestJob);
+                }
+                else
+                {
+                    //ESPLORAZIONE -> Idea: Effettuo una GRASP
+                    int index = r.Next(candidateList.Count());
+                    index %= iteration;
+                    partialSchedule.Add(candidateList.schedule[index]);
+                    candidateList.schedule.RemoveAt(index);
+                }
+            }            
+            return partialSchedule;
         }
     }
 }

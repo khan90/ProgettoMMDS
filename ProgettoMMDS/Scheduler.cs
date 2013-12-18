@@ -54,7 +54,7 @@ namespace ProgettoMMDS
                 fm.OutputSolution(schedule.schedule);
                 fm.OutputResult(schedule.getTardiness(), elapsedTime.TotalMilliseconds);
                 fm.OutputProva(schedule.schedule, schedule.getTardiness(), elapsedTime.TotalMilliseconds, "Prova");               
-                Console.ReadKey();
+                //Console.ReadKey();
             }
         }
         /// <summary>
@@ -97,7 +97,7 @@ namespace ProgettoMMDS
                     currentSchedule.swap(num1, num2);
                 }
             }
-            Console.WriteLine(j);
+            //Console.WriteLine(j);
             return (schedule);
         }
 
