@@ -35,32 +35,21 @@ namespace ProgettoMMDS
             }
             else
             {
+                //Apertura file
                 FileManager fm = new FileManager(args[0]);
                 jobs = (fm.getJobsList());                
-                /* for (int i = 0; i < jobs.Count; i++)
-                {
-                    Console.WriteLine(jobs[i].ToString());
-                }*/
+             
 
                 //INIZIO CONTEGGIO SECONDI
                 DateTime startTime = DateTime.Now;
 
-                //List<int> schedule = new List<int>(constructScheduleEDD(fm.getNumberofMachine(), fm.getNumberofJobs()));
-
-                /*//Stampa EDD
-                for (int i = 0; i < schedule.Count; i++)
-                {
-                    Console.WriteLine(schedule[i].ToString());
-                }
-
-                Console.WriteLine("Tardiness totale: " + getTardiness(schedule).ToString());
-                //*/
+               
 
                 jobs.Add(new Job(fm.getNumberofJobs() + 1, fm.getMaxProcessingTime()+50, 0));
                 List<PartialSolution> pool = new List<PartialSolution>();
                 int lunghezza = fm.getNumberofJobs() + fm.getNumberofMachine();
                 int dummy = fm.getNumberofJobs() + 1;
-                for (int k = 0; k <5; k++)
+                /*for (int k = 0; k <5; k++)
                 {
                     for (int j = 0; j < lunghezza; j++)
                     {
@@ -72,7 +61,21 @@ namespace ProgettoMMDS
                             
                         }
                     } 
-                }
+                }*/
+
+                PartialSolution ps1 = new PartialSolution(1, dummy, 1, lunghezza);
+                PartialSolution ps2 = new PartialSolution(3, dummy, 2, lunghezza);
+                PartialSolution ps3 = new PartialSolution(1, dummy, 1, lunghezza);
+
+                Console.WriteLine(ps1.ToString());
+                Console.WriteLine(ps2.ToString());
+                Console.WriteLine(ps3.ToString());
+
+                ps1.mergeSolution(ps2);
+                Console.WriteLine(ps1.ToString());
+                ps3.mergeSolution(ps1);
+                Console.WriteLine(ps3.ToString());
+
                 
                 //*
                 for (int i = 0; i < pool.Count; i++)
