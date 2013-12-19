@@ -41,70 +41,36 @@ namespace ProgettoMMDS
 
 
 
-        public List<PartialSolution> mergeSolution(PartialSolution ps1, PartialSolution ps2)
+        public PartialSolution mergeSolution(PartialSolution ps1, PartialSolution ps2)
         {
             int offset;
-            List<PartialSolution> retval= new List<PartialSolution>();
+           
             if ((offset=feasible(ps1.Mask,ps2.Mask))!=-1) //se è feasible posso fare la fusione
             {
 
-                List<int> newPSSchedule1 = new List<int>();
-                List<int> newPSSchedule2 = new List<int>();
+                List<int> merge = new List<int>();
+                BitArray mergemask = new BitArray(ps1.getSchedule().Count + offset);
+                mergemask.Not();
 
-                BitArray newPSMask1 = new BitArray(jobs.Count + macchine);
-                newPSMask1.Not();
-                BitArray newPSMask2 = new BitArray(jobs.Count + macchine);
-                newPSMask2.Not();
-                BitArray jobschedulati = new BitArray(jobs.Count);
-                int macc;
-                int jobdainserire;
-                bool ammisible = true;
-
-                for (int i = 0; i < ps1.getSchedule().Count; i++)
+                for (int i = 0; i < ps1.getSchedule().Count + offset; i++)
                 {
-                    if(ps1.getSchedule()[i]!=dummy)
+                    if((i<ps1.getSchedule().Count)&&(ps1.getSchedule()[i])!=dummy)
                     {
-                        jobdainserire = ps1.getSchedule()[i];
+                        merge.Add(ps1.getSchedule()[i]);
+                        mergemask.Set(i, false);
                     }
-                    else if (ps2.getSchedule()[i]!=dummy)
+                    else if(i>=offset)
                     {
-                        jobdainserire = ps2.getSchedule()[i];
-                    }
+                        merge.Add(ps2.getSchedule()[i-offset]);
+                        mergemask.Set(i-offset,ps2.Mask[i-offset]);
+                    } 
                     else
                     {
-                        jobdainserire = dummy;
-                    }
-                    //devo inserire il job
-                    if (jobdainserire == 0)
-                    {
-                        //controllo se è ammissibile su macchine
-                        if (macc < macchine)
-                        {
-                            newPSSchedule1.Add(0);
-                            newPSMask1.Set(i, false);
-                            macc++;
-                        }
-                        else
-                        {
-                            newPSSchedule2.Add(0);
-                            newPSMask2.Set(i, false);
-                        }
-                    }
-                    else
-                    {
-                        //è un job 
-                    }
-
-                }
-
-                for (int i = 0; i < ps2.getSchedule().Count; i++)
-                {
-                    if (ps2.getSchedule()[i] != dummy)
-                    {
-                        newPSSchedule[i] = ps2.getSchedule()[i];
-                        newPSMask.Set(i, false);
+                        merge.Add(dummy);
                     }
                 }
+                int t = getTardiness(merge);
+                return new PartialSolution(merge, mergemask, t);
             }
             else
             {

@@ -63,18 +63,19 @@ namespace ProgettoMMDS
                     } 
                 }*/
 
-                PartialSolution ps1 = new PartialSolution(1, dummy, 1, lunghezza);
-                PartialSolution ps2 = new PartialSolution(3, dummy, 2, lunghezza);
-                PartialSolution ps3 = new PartialSolution(1, dummy, 1, lunghezza);
+                Generator gen = new Generator(jobs, fm.getNumberofMachine());
+
+                PartialSolution ps1 = gen.makePartialSolution(1, 0);
+                PartialSolution ps2 = gen.makePartialSolution(5, 3);
+                PartialSolution ps3 = gen.makePartialSolution(1, 0);
 
                 Console.WriteLine(ps1.ToString());
                 Console.WriteLine(ps2.ToString());
                 Console.WriteLine(ps3.ToString());
 
-                ps1.mergeSolution(ps2);
-                Console.WriteLine(ps1.ToString());
-                ps3.mergeSolution(ps1);
-                Console.WriteLine(ps3.ToString());
+                PartialSolution ps4 = gen.mergeSolution(ps1,ps2);
+                Console.WriteLine(ps4.ToString());
+                PartialSolution ps5 = gen.mergeSolution(ps1,ps3);
 
                 
                 //*
