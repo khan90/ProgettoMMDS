@@ -10,8 +10,9 @@ namespace ProgettoMMDS
     class PartialSolution
     {
         List<int> _schedule;
-        BitArray _mask;
-        public BitArray Mask
+        ulong _mask; //64bit-->     0 se dummy 
+                     //             1 se job è presente
+        public ulong Mask
         {
             get
             {
@@ -56,7 +57,7 @@ namespace ProgettoMMDS
         /// <param name="schedule"></param>
         /// <param name="mask"></param>
         /// <param name="tardiness"></param>
-        public PartialSolution(List<int> schedule, BitArray mask, int tardiness)
+        public PartialSolution(List<int> schedule, ulong mask, int tardiness)
         {
             _schedule = schedule;
             Mask = mask;
@@ -67,14 +68,14 @@ namespace ProgettoMMDS
         
 
  
-        public String ToString()
+        public override String ToString()
         {
             String ret = "|";
             for (int i = 0; i < _schedule.Count; i++)
 			{
 			    ret+=_schedule[i]+"|";
 			}
-            ret += "Tardiness:" + _tardiness;
+            ret += "\nTardiness:" + _tardiness;
             return (ret);
         }
         

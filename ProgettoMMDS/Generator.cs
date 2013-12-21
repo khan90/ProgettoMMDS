@@ -12,22 +12,27 @@ namespace ProgettoMMDS
         private List<Job> jobs;
         int macchine; 
         int dummy;
-
+        ulong[] MASKS;
+        int lunghezzaSch;
 
         public Generator(List<Job> istanza, int NumberMachine)
         {
-            jobs=istanza;
+            jobs= istanza;
             macchine = NumberMachine;
-            dummy = jobs.Count + 1;
+            dummy = jobs.Count;
+            MASKS = generateMasks();
+            lunghezzaSch = jobs.Count + macchine - 1;
+            
         }
 
+        
+        
         public PartialSolution makePartialSolution(int idJob, int posizione)
         {
             
             List<int> schedule = new List<int>();
-            BitArray mask = new BitArray(jobs.Count+macchine);
-            mask.Not();
-            mask.Set(posizione,false); // 0 se ho un job
+            ulong mask = 0UL; //maschera vuota
+            mask = mask | MASKS[posizione]; //set del bit interssato
             for (int i = 0; i < jobs.Count + macchine; i++)
 			{
                 if(i==posizione)
@@ -38,7 +43,7 @@ namespace ProgettoMMDS
             int tardiness = getTardiness(schedule);
             return (new PartialSolution(schedule, mask, tardiness));
         }
-
+        
 
 
         public PartialSolution mergeSolution(PartialSolution ps1, PartialSolution ps2)
@@ -49,20 +54,17 @@ namespace ProgettoMMDS
             {
 
                 List<int> merge = new List<int>();
-                BitArray mergemask = new BitArray(ps1.getSchedule().Count + offset);
-                mergemask.Not();
+                ulong maskmerge = ps1.Mask | (ps2.Mask >> offset);
 
                 for (int i = 0; i < ps1.getSchedule().Count + offset; i++)
                 {
                     if((i<ps1.getSchedule().Count)&&(ps1.getSchedule()[i])!=dummy)
                     {
                         merge.Add(ps1.getSchedule()[i]);
-                        mergemask.Set(i, false);
                     }
                     else if(i>=offset)
                     {
                         merge.Add(ps2.getSchedule()[i-offset]);
-                        mergemask.Set(i-offset,ps2.Mask[i-offset]);
                     } 
                     else
                     {
@@ -70,7 +72,7 @@ namespace ProgettoMMDS
                     }
                 }
                 int t = getTardiness(merge);
-                return new PartialSolution(merge, mergemask, t);
+                return new PartialSolution(merge, maskmerge, t);
             }
             else
             {
@@ -99,7 +101,7 @@ namespace ProgettoMMDS
             }
             return (tardiness);
         }
-
+       
 
 
         /// <summary>
@@ -108,17 +110,36 @@ namespace ProgettoMMDS
         /// <param name="bitArray1"></param>
         /// <param name="bitArray2"></param>
         /// <returns>-1 se non è possibile, altrimenti mi ritorna l'offset</returns>
-        private int feasible(BitArray bitArray1, BitArray bitArray2)
+        private int feasible(ulong bitArray1, ulong bitArray2)
         {
 
-            BitArray fusion = new BitArray(bitArray1);
-            fusion.Or(bitArray2);
-            foreach (bool value in fusion)
+            ulong shift = bitArray2;
+            ulong fusion;
+
+            for (int i = 0; i< lunghezzaSch ; i++)
             {
-                if (!value)
-                    return -1;
+                fusion = bitArray1 & shift;
+                
+                if (fusion == 0)
+                    return i;
+                shift= shift >> 1;
             }
-            return 0;
+            return -1;
         }
+        
+        private ulong[] generateMasks()
+        {
+            ulong one = 1UL;
+            ulong[] retval=new ulong[64];
+ 	        for(int i= 64-1 ;i>=0 ; i--)
+            {
+			    retval[i]=one;
+                one=one<<1;
+               // Console.WriteLine(i+":"+Convert.ToString((long)retval[i],2));
+            }
+            return retval;
+        }
+
     }
+
 }

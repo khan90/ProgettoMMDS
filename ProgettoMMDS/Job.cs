@@ -35,7 +35,7 @@ namespace ProgettoMMDS
         }
 
 
-        public string ToString()
+        public String ToString()
         {
             return "id: "+id+"\tProcTime: " + processingtime + "\tDD: " + duedatetime;
         }

@@ -46,9 +46,12 @@ namespace ProgettoMMDS
                
 
                 jobs.Add(new Job(fm.getNumberofJobs() + 1, fm.getMaxProcessingTime()+50, 0));
-                List<PartialSolution> pool = new List<PartialSolution>();
+                //List<PartialSolution> pool = new List<PartialSolution>();
                 int lunghezza = fm.getNumberofJobs() + fm.getNumberofMachine();
                 int dummy = fm.getNumberofJobs() + 1;
+
+
+
                 /*for (int k = 0; k <5; k++)
                 {
                     for (int j = 0; j < lunghezza; j++)
@@ -64,7 +67,7 @@ namespace ProgettoMMDS
                 }*/
 
                 Generator gen = new Generator(jobs, fm.getNumberofMachine());
-
+                
                 PartialSolution ps1 = gen.makePartialSolution(1, 0);
                 PartialSolution ps2 = gen.makePartialSolution(5, 3);
                 PartialSolution ps3 = gen.makePartialSolution(1, 0);
@@ -76,9 +79,9 @@ namespace ProgettoMMDS
                 PartialSolution ps4 = gen.mergeSolution(ps1,ps2);
                 Console.WriteLine(ps4.ToString());
                 PartialSolution ps5 = gen.mergeSolution(ps1,ps3);
-
+                Console.WriteLine(ps5.ToString());
                 
-                //*
+                /*
                 for (int i = 0; i < pool.Count; i++)
                 {
                    // Console.WriteLine(pool[i].ToString());
