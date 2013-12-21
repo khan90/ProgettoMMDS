@@ -80,6 +80,91 @@ namespace ProgettoMMDS
                 return null;
             }
         }
+
+        public PartialSolution[] separate(PartialSolution instable)
+        {
+            int offset = instable.getSchedule().Count - lunghezzaSch-1;
+            List<int> schedule1 = new List<int>();
+            List<int> schedule2 = new List<int>();
+            ulong mask1 = 0UL;
+            ulong mask2 = 0UL;
+            BitArray jobpresenti = new BitArray(lunghezzaSch, false);
+            int t1, t2, m1=1;
+
+            for(int i = 0; i<instable.getSchedule().Count;i++)//controllo macchine è diverso
+            {
+                int job = instable.getSchedule()[i];
+                if(i<offset)
+                {
+                    schedule1.Add(job);
+                    if (job != dummy)
+                    {
+                        if (job != 0)
+                        {
+                            jobpresenti[job] = true;
+                            mask1 = mask1 | MASKS[instable.getSchedule()[schedule1.Count - 1]];
+                        }
+                        else
+                        {
+                            m1++;
+                            mask1 = mask1 | MASKS[instable.getSchedule()[schedule1.Count - 1]];
+                        }
+                    }
+                }
+                else if (i > lunghezzaSch)
+                {
+                    schedule2.Add(instable.getSchedule()[i]);
+                    if (instable.getSchedule()[i] != dummy)
+                        mask2 = mask2 | MASKS[instable.getSchedule()[schedule2.Count-1]];
+                }
+                else
+                {
+                    if (job == 0)
+                    {
+                        Console.WriteLine("MACCHINA");
+                        if (m1 < macchine)
+                        {
+                            schedule1.Add(job);
+                            schedule2.Add(dummy);
+                            m1++;
+                            mask1 = mask1 | MASKS[schedule1.Count - 1];
+                        }
+                        else
+                        {
+                            schedule1.Add(dummy);
+                            schedule2.Add(job);
+                            mask2 = mask2 | MASKS[schedule2.Count - 1];
+                        }
+                    }
+                    else if(job != dummy)
+                    {
+                        if (jobpresenti[job] == true)
+                        {
+                            schedule1.Add(dummy);
+                            schedule2.Add(job);
+                            mask2 = mask2 | MASKS[schedule2.Count - 1];
+                        }
+                        else
+                        {
+                            schedule1.Add(job);
+                            schedule2.Add(dummy);
+                            jobpresenti[job] = true;
+                            mask1 = mask1 | MASKS[schedule1.Count - 1];
+                        }
+                    }
+                    else 
+                    {
+                        schedule1.Add(dummy);
+                        schedule2.Add(dummy);
+                    }
+                }
+            }
+            t1 = getTardiness(schedule1);
+            t2 = getTardiness(schedule2);
+            return new PartialSolution[] { new PartialSolution(schedule1, mask1, t1), new PartialSolution(schedule2, mask2, t2) };
+        }
+
+
         int getTardiness(List<int> schedule)
         {
             int time = 0;

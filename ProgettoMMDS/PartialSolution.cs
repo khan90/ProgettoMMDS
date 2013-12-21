@@ -75,7 +75,7 @@ namespace ProgettoMMDS
 			{
 			    ret+=_schedule[i]+"|";
 			}
-            ret += "\nTardiness:" + _tardiness;
+            ret += "\nTardiness:" + _tardiness + " Mask:"+_mask;
             return (ret);
         }
         
