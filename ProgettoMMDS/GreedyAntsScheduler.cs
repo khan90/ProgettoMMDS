@@ -72,6 +72,8 @@ namespace ProgettoMMDS
                 constructGreedysolutions(iteration);
             }
             
+
+            //STAMPA DELLA MATRICE
             for (int i = 0; i < schedule.Count(); i++)
             {
                 for (int j = 0; j < schedule.Count(); j++)
@@ -80,6 +82,7 @@ namespace ProgettoMMDS
                 }
                 Console.Write("\n");
             }
+
             return schedule;
         }
 
@@ -87,15 +90,14 @@ namespace ProgettoMMDS
         {
             //NUMERO DI FORMICHE
             int ants = 10;
-            double alfa = 0.7;
+            double alfa = 0.8;
             int bestTardiness = schedule.getTardiness();
             Stack<Schedule> solutionList = new Stack<Schedule>();
             //faccio partire le formiche
             for (int j = 0; j < ants; j++)
             {
                 solutionList.Push(antRun(iteration));
-            }
-            
+            }            
             //EVAPORAZIONE
             for (int i = 0; i < schedule.Count(); i++)
             {
@@ -126,7 +128,7 @@ namespace ProgettoMMDS
                 for (int i = 0; i < currentSchedule.Count(); i++)
                 {
                     int elemento = currentSchedule.schedule[i];                   
-                    traceMatrix[elemento, i] += (traceMatrix[elemento,i] * bestTardiness/currentTardiness);                    
+                    traceMatrix[elemento, i] += (5*(bestTardiness)/currentTardiness);                    
                     if (traceMatrix[elemento, i] > 100)
                     {
                         traceMatrix[elemento, i] = 100;
@@ -137,7 +139,7 @@ namespace ProgettoMMDS
 
         private Schedule antRun(int iteration)
         {
-            iteration /= 2;
+            //iteration /= 2;
             Random r = new Random();
             int choice = r.Next(100);
             int soglia = 70;
@@ -147,6 +149,7 @@ namespace ProgettoMMDS
             Schedule partialSchedule = new Schedule(jobs);
             for (int i = 0; i < schedule.Count(); i++)
             {
+                choice = r.Next(100);
                 if (choice < soglia)
                 {
                     //SFRUTTAMENTO -> Seguo il ferormone e prendo quello che ha il valore più alto
@@ -154,7 +157,7 @@ namespace ProgettoMMDS
                     int bestJob = 0;
                     for (int j = 0; j < candidateList.Count(); j++)
                     {
-                        if (traceMatrix[j, i] > maxValue)
+                        if (traceMatrix[j, i] >= maxValue)
                         {
                             bestJob = j;
                             maxValue = traceMatrix[j, i];
@@ -166,16 +169,43 @@ namespace ProgettoMMDS
                 else
                 {
                     //ESPLORAZIONE -> Idea: Effettuo una GRASP
-                    int maxIndex = iteration;
-                    if (iteration >= candidateList.Count()){
-                        maxIndex = candidateList.Count() - 1;
+                    int maxIndex = iteration/10 + 1 ;
+                    if (maxIndex >= candidateList.Count()){
+                        maxIndex = candidateList.Count();
                     }
-                    int index = r.Next(maxIndex);
+                    int index = 0;
+                    double sommaCol = 0;
+                    //probabilità per i singoli indici
+                    double[] prob = new double[maxIndex];
+                    //somma di una colonna
+                    for (int k = 0; k < maxIndex; k++)
+                    {
+                        sommaCol += traceMatrix[candidateList.schedule[k], i];
+                    }
+                    //calcolo della probabilità dei singoli elementi
+                    double startInterval = 0;
+                    for (int k = 0; k < maxIndex; k++)
+                    {
+                        prob[k] = startInterval + (traceMatrix[candidateList.schedule[k], i] / sommaCol);
+                        //Console.WriteLine(prob[k]);
+                        startInterval = prob[k];
+                    }
+                    //NUMERO CASUALE TRA 0 e 1
+                    double num = r.NextDouble();
+                    for (int k = 0; k < maxIndex; k++)
+                    {
+                        if (num <= prob[k])
+                        {
+                            index = k;
+                            break;
+                        }
+                    }
+
                     partialSchedule.Add(candidateList.schedule[index]);
                     candidateList.schedule.RemoveAt(index);
                 }
             }
-            return LocalSearchBestInsert(LocalSearchBestInsert(partialSchedule));
+            return LocalSearchBestInsert(partialSchedule);
         }
     }
 }
