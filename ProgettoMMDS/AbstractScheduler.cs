@@ -13,7 +13,7 @@ namespace ProgettoMMDS
         /// </summary>
         protected List<Job> jobs = new List<Job>();
         protected volatile static bool fine = false;
-        protected static long MTIME = 1000;
+        protected static long MTIME = 10000;
 
         public abstract void run(string[] args);
         
@@ -43,7 +43,6 @@ namespace ProgettoMMDS
             //Tabu list
             int[] tabuList = new int[tabuCapacity];
             int tabuIndex = 0;
-
             while ((improvment > minImprovment) || (i < maxIterations))
             {
                 i++;
@@ -54,7 +53,7 @@ namespace ProgettoMMDS
                 {
                     if (num1 == tabuList[j])
                     {
-                        j = 0;
+                        j = 0; ;    //Un while non è più elegante!!??!?!?
                         num1 = r.Next(maxInt);
                         //DA CANCELLARE STAMPA
                         //Console.WriteLine("Non posso spostare questo elemento");
@@ -67,7 +66,7 @@ namespace ProgettoMMDS
                 int num2;
                 for (num2 = 0; num2 < maxInt; num2++)
                 {
-                    if (num2 == num1)
+                    if (num2 == num1)   //e se facessimo il controllo su entrambi i numeri se appartengono alla tabù list?
                         continue;
                     //SWAP
                     currentSchedule.swap(num1, num2);

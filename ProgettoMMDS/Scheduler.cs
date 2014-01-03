@@ -12,6 +12,9 @@ namespace ProgettoMMDS
     /// </summary>
     class Scheduler : AbstractScheduler
     {
+        Schedule schedule;
+        int bestTardiness;
+        int j = 0;
         public override void run(string[] args)
         {
             if (!(args.Length > 0))
@@ -28,7 +31,8 @@ namespace ProgettoMMDS
                 DateTime startTime = DateTime.Now;
 
                 //QUI l'algoritmo di ricerca del minimo ->
-                Schedule schedule = SearchSolutionMultistart(fm.getNumberofMachine(), fm.getNumberofJobs());               
+                //Schedule schedule = SearchSolutionMultistart(fm.getNumberofMachine(), fm.getNumberofJobs());
+                Schedule schedule = SearchSolutionMultistartParallel(fm.getNumberofMachine(), fm.getNumberofJobs());
 
                 //FINE CONTEGGIO SECONDI
                 DateTime stopTime = DateTime.Now;
@@ -40,10 +44,12 @@ namespace ProgettoMMDS
                 //OUTPUT
                 fm.OutputSolution(schedule.schedule);
                 fm.OutputResult(schedule.getTardiness(), elapsedTime.TotalMilliseconds);
-                fm.OutputProva(schedule.schedule, schedule.getTardiness(), elapsedTime.TotalMilliseconds, "Prova");               
-                //Console.ReadKey();
+                fm.OutputProva(schedule.schedule, schedule.getTardiness(), elapsedTime.TotalMilliseconds, "Prova");
+                Console.WriteLine("Iterazioni: " + j);
+                Console.ReadKey();
             }
         }
+
         /// <summary>
         /// Ricerca Locale multistart
         /// Multistart
@@ -56,45 +62,74 @@ namespace ProgettoMMDS
             Thread thread = new Thread(new ThreadStart(timer));
             thread.Start();
             //soluzione migliore -> Il metodo per ora fa solo una ricerca locale a partire dall'EDD
-            Schedule schedule = new Schedule(jobs);
+            schedule = new Schedule(jobs);
             schedule.constructScheduleEDD(m,n);
-            int bestTardiness = schedule.getTardiness();
-            Schedule currentSchedule = new Schedule(schedule);
-            int j = 0;
+            bestTardiness = schedule.getTardiness();
+
             while (!fine)
             {
-                currentSchedule = new Schedule(LocalSearchBestInsert(currentSchedule));
-                j++;
-                int currentTardiness = currentSchedule.getTardiness(); 
-                if (currentTardiness < bestTardiness)
+                Thread[] array = new Thread[1];
+                for (int i = 0; i < array.Length; i++)
                 {
-                    schedule = new Schedule(currentSchedule);
-                    bestTardiness = currentTardiness;
+                    // Start the thread with a ThreadStart.
+                    array[i] = new Thread(new ThreadStart(Start));
+                    array[i].Start();
                 }
-                Random r = new Random();
-                for (int i = 0; i < schedule.Count(); i++)
-                {
-                    int num1 = r.Next(schedule.Count());
-                    int num2 = r.Next(schedule.Count());
-                    if ((num1 == num2)||(0 == currentSchedule.schedule[num1])||(0 == currentSchedule.schedule[num2]))
-                    {
-                        i--;
-                        continue;
-                    }
-                    currentSchedule.swap(num1, num2);
-                }
+                //array[0].Join();
             }
             //Console.WriteLine(j);
             return (schedule);
         }
 
-        void timer()
+        Schedule SearchSolutionMultistartParallel(int m, int n)
         {
-            //Console.WriteLine("Counter partito");
-            Thread.Sleep((int)MTIME);
-            fine = true;
+            Thread thread = new Thread(new ThreadStart(timer));
+            thread.Start();
+            //soluzione migliore -> Il metodo per ora fa solo una ricerca locale a partire dall'EDD
+            schedule = new Schedule(jobs);
+            schedule.constructScheduleEDD(m,n);
+            bestTardiness = schedule.getTardiness();
+            while (!fine)
+            {
+                Parallel.Invoke(() => Start(), () => Start());
+                //array[0].Join();
+            }
+            //Console.WriteLine(j);
+            return (schedule);
         }
-       
 
+        
+        public void Start()
+        {
+            Schedule currentSchedule;
+            j++;
+            lock (schedule)
+            {
+                 currentSchedule = new Schedule(schedule);
+            }
+            //Tiro un calcio alla soluzione
+            Random r = new Random();
+            for (int i = 0; i < currentSchedule.Count()/10; i++)
+            {
+                int num1 = r.Next(currentSchedule.Count());
+                int num2 = r.Next(currentSchedule.Count());
+                if ((num1 == num2) || (0 == currentSchedule.schedule[num1]) || (0 == currentSchedule.schedule[num2]))
+                {
+                    i--;
+                    continue;
+                }
+                currentSchedule.swap(num1, num2);
+            }
+            currentSchedule = new Schedule(LocalSearchBestInsert(currentSchedule));
+            int currentTardiness = currentSchedule.getTardiness();
+            lock (schedule)
+            {
+                if (currentTardiness < bestTardiness)
+                {
+                    schedule = new Schedule(currentSchedule);
+                    bestTardiness = currentTardiness;
+                }
+            }
+        }
     }
 }

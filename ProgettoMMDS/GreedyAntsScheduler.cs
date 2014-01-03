@@ -17,6 +17,7 @@ namespace ProgettoMMDS
         /// traceMatrix[j,i] = job J preso in posizione i
         /// </summary>
         double[,] traceMatrix;
+        int j = 0;
 
         public override void run(string[] args)
         {
@@ -46,6 +47,7 @@ namespace ProgettoMMDS
                 fm.OutputSolution(schedule.schedule);
                 fm.OutputResult(schedule.getTardiness(), elapsedTime.TotalMilliseconds);
                 fm.OutputProva(schedule.schedule, schedule.getTardiness(), elapsedTime.TotalMilliseconds, "Prova");
+                Console.WriteLine("Iterazioni: " + j);
                 Console.ReadKey();
             }
         }
@@ -70,6 +72,7 @@ namespace ProgettoMMDS
             {
                 iteration++;
                 constructGreedysolutions(iteration);
+                j++;
             }
             
 
@@ -97,7 +100,29 @@ namespace ProgettoMMDS
             for (int j = 0; j < ants; j++)
             {
                 solutionList.Push(antRun(iteration));
-            }            
+            } 
+            /*Parallel.Invoke(()=> 
+			{
+                for (int j = 0; j < ants/2; j++)
+                {
+                    Schedule thisSchedule = antRun(iteration);
+                    lock (solutionList)
+                    {
+                        solutionList.Push(thisSchedule);
+                    }  
+                }
+            },
+            () =>
+            {
+                for (int j = 0; j < ants / 2; j++)
+                {
+                    Schedule thisSchedule = antRun(iteration);
+                    lock (solutionList)
+                    {
+                        solutionList.Push(thisSchedule);
+                    }
+                }
+            });*/
             //EVAPORAZIONE
             for (int i = 0; i < schedule.Count(); i++)
             {
