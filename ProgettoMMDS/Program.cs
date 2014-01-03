@@ -14,7 +14,8 @@ namespace ProgettoMMDS
         static void Main(string[] args)
         {
             //AbstractScheduler scheduler = new Scheduler();
-            AbstractScheduler scheduler = new GreedyAntsScheduler();
+            //AbstractScheduler scheduler = new GreedyAntsScheduler();
+            AbstractScheduler scheduler = new GeneticScheduler();
             scheduler.run(args);
             
         }

@@ -87,7 +87,7 @@ namespace ProgettoMMDS
             stream.Write("M1\t");
             for(int i=0;i<schedule.Count;i++)
             {
-                if(schedule[i]==0)
+                if(schedule[i]<=0)
                 {
                     stream.Write("\r\nM"+ ++mac +"\t");
                 }

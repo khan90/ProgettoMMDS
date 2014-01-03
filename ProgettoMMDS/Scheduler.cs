@@ -33,7 +33,7 @@ namespace ProgettoMMDS
 
                 //QUI l'algoritmo di ricerca del minimo ->
                 //Schedule schedule = SearchSolutionMultistart(fm.getNumberofMachine(), fm.getNumberofJobs());
-                Schedule schedule = SearchSolutionMultistartParallel(fm.getNumberofMachine(), fm.getNumberofJobs());
+                SearchSolutionMultistartParallel(fm.getNumberofMachine(), fm.getNumberofJobs());
 
                 //FINE CONTEGGIO SECONDI
                 DateTime stopTime = DateTime.Now;
@@ -47,7 +47,7 @@ namespace ProgettoMMDS
                 fm.OutputResult(schedule.getTardiness(), elapsedTime.TotalMilliseconds);
                 fm.OutputProva(schedule.schedule, schedule.getTardiness(), elapsedTime.TotalMilliseconds, "Prova");
                 Console.WriteLine("Iterazioni: " + j);
-                //Console.ReadKey();
+                Console.ReadKey();
             }
         }
 
@@ -58,7 +58,7 @@ namespace ProgettoMMDS
         /// <param name="m">Numero di macchine</param>
         /// <param name="n">Numero di Job</param>
         /// <returns>Miglior schedule trovato</returns>
-        Schedule SearchSolutionMultistart(int m, int n)
+        void SearchSolutionMultistart(int m, int n)
         {
             Thread thread = new Thread(new ThreadStart(timer));
             thread.Start();
@@ -79,7 +79,7 @@ namespace ProgettoMMDS
                 //array[0].Join();
             }
             //Console.WriteLine(j);
-            return (schedule);
+            //return (schedule);
         }
 
         Schedule SearchSolutionMultistartParallel(int m, int n)

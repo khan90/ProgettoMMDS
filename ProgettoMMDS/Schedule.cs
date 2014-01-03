@@ -63,9 +63,10 @@ namespace ProgettoMMDS
                 index[i] = i;
                 time[i] = 0;
             }
+            int mi = 0;
             for (int i = 0; i < m - 1; i++)
             {
-                _schedule.Add(0);
+                _schedule.Add(mi--);
             }
             int bestMac = 0;
             for (int i = 0; i < n; i++)
@@ -97,7 +98,7 @@ namespace ProgettoMMDS
 
             foreach (int i in _schedule)
             {
-                if (i == 0)
+                if (i <= 0)
                     time = 0;
                 else
                 {
