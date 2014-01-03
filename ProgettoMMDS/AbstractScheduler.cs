@@ -13,7 +13,7 @@ namespace ProgettoMMDS
         /// </summary>
         protected List<Job> jobs = new List<Job>();
         protected volatile static bool fine = false;
-        protected static long MTIME = 10000;
+        protected static long MTIME = 1000;
 
         public abstract void run(string[] args);
         

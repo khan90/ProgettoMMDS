@@ -17,7 +17,8 @@ namespace ProgettoMMDS
         /// traceMatrix[j,i] = job J preso in posizione i
         /// </summary>
         double[,] traceMatrix;
-        int j = 0;
+        //numero di iterazioni
+        int jit = 0;
 
         public override void run(string[] args)
         {
@@ -47,8 +48,8 @@ namespace ProgettoMMDS
                 fm.OutputSolution(schedule.schedule);
                 fm.OutputResult(schedule.getTardiness(), elapsedTime.TotalMilliseconds);
                 fm.OutputProva(schedule.schedule, schedule.getTardiness(), elapsedTime.TotalMilliseconds, "Prova");
-                Console.WriteLine("Iterazioni: " + j);
-                Console.ReadKey();
+                Console.WriteLine("Iterazioni: " + jit);
+                //Console.ReadKey();
             }
         }
 
@@ -72,11 +73,12 @@ namespace ProgettoMMDS
             {
                 iteration++;
                 constructGreedysolutions(iteration);
-                j++;
+                Interlocked.Increment(ref jit);
             }
             
 
             //STAMPA DELLA MATRICE
+            /*
             for (int i = 0; i < schedule.Count(); i++)
             {
                 for (int j = 0; j < schedule.Count(); j++)
@@ -85,44 +87,31 @@ namespace ProgettoMMDS
                 }
                 Console.Write("\n");
             }
-
+            */
             return schedule;
         }
 
         private void constructGreedysolutions(int iteration)
         {
             //NUMERO DI FORMICHE
-            int ants = 10;
+            int ants = 16;
             double alfa = 0.8;
             int bestTardiness = schedule.getTardiness();
             Stack<Schedule> solutionList = new Stack<Schedule>();
             //faccio partire le formiche
-            for (int j = 0; j < ants; j++)
+            /*for (int j = 0; j < ants; j++)
             {
                 solutionList.Push(antRun(iteration));
-            } 
-            /*Parallel.Invoke(()=> 
-			{
-                for (int j = 0; j < ants/2; j++)
-                {
-                    Schedule thisSchedule = antRun(iteration);
-                    lock (solutionList)
-                    {
-                        solutionList.Push(thisSchedule);
-                    }  
-                }
-            },
-            () =>
+            }*/
+            Parallel.For(0, ants, i =>
             {
-                for (int j = 0; j < ants / 2; j++)
+                Schedule thisSchedule = antRun(iteration);
+                lock (solutionList)
                 {
-                    Schedule thisSchedule = antRun(iteration);
-                    lock (solutionList)
-                    {
-                        solutionList.Push(thisSchedule);
-                    }
+                    solutionList.Push(thisSchedule);
                 }
-            });*/
+            });
+
             //EVAPORAZIONE
             for (int i = 0; i < schedule.Count(); i++)
             {
@@ -152,8 +141,15 @@ namespace ProgettoMMDS
                 //Console.WriteLine(bestTardiness +" "+ currentTardiness);
                 for (int i = 0; i < currentSchedule.Count(); i++)
                 {
-                    int elemento = currentSchedule.schedule[i];                   
-                    traceMatrix[elemento, i] += (5*(bestTardiness)/currentTardiness);                    
+                    int elemento = currentSchedule.schedule[i];
+                    //Traccia dove sono passato
+                    traceMatrix[elemento, i] += (5*(bestTardiness)/currentTardiness);
+                    //Traccia nelle "vicinanze"
+                    if ((i + 1) < currentSchedule.Count())
+                        traceMatrix[elemento, i + 1] += (2 * (bestTardiness) / currentTardiness);
+                    if((i-1)>= 0)
+                        traceMatrix[elemento, i - 1] += (2 * (bestTardiness) / currentTardiness);
+                    
                     if (traceMatrix[elemento, i] > 100)
                     {
                         traceMatrix[elemento, i] = 100;
@@ -164,7 +160,6 @@ namespace ProgettoMMDS
 
         private Schedule antRun(int iteration)
         {
-            //iteration /= 2;
             Random r = new Random();
             int choice = r.Next(100);
             int soglia = 70;
@@ -194,6 +189,7 @@ namespace ProgettoMMDS
                 else
                 {
                     //ESPLORAZIONE -> Idea: Effettuo una GRASP
+                    //nelle prime iterazioni seguo sempre la EDD
                     int maxIndex = iteration/10 + 1 ;
                     if (maxIndex >= candidateList.Count()){
                         maxIndex = candidateList.Count();
@@ -207,7 +203,7 @@ namespace ProgettoMMDS
                     {
                         sommaCol += traceMatrix[candidateList.schedule[k], i];
                     }
-                    //calcolo della probabilità dei singoli elementi
+                    //calcolo della probabilità dei singoli elementi (intervalli da 0 a 1)
                     double startInterval = 0;
                     for (int k = 0; k < maxIndex; k++)
                     {
@@ -215,8 +211,9 @@ namespace ProgettoMMDS
                         //Console.WriteLine(prob[k]);
                         startInterval = prob[k];
                     }
-                    //NUMERO CASUALE TRA 0 e 1
+                    // genero un NUMERO CASUALE TRA 0 e 1 per decidere quale job scegliere
                     double num = r.NextDouble();
+                    //Vado a vedere fino a che punto devo andare avanti
                     for (int k = 0; k < maxIndex; k++)
                     {
                         if (num <= prob[k])
@@ -225,7 +222,6 @@ namespace ProgettoMMDS
                             break;
                         }
                     }
-
                     partialSchedule.Add(candidateList.schedule[index]);
                     candidateList.schedule.RemoveAt(index);
                 }

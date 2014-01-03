@@ -15,6 +15,7 @@ namespace ProgettoMMDS
         Schedule schedule;
         int bestTardiness;
         int j = 0;
+        int parallelThread = 4;
         public override void run(string[] args)
         {
             if (!(args.Length > 0))
@@ -46,7 +47,7 @@ namespace ProgettoMMDS
                 fm.OutputResult(schedule.getTardiness(), elapsedTime.TotalMilliseconds);
                 fm.OutputProva(schedule.schedule, schedule.getTardiness(), elapsedTime.TotalMilliseconds, "Prova");
                 Console.WriteLine("Iterazioni: " + j);
-                Console.ReadKey();
+                //Console.ReadKey();
             }
         }
 
@@ -91,7 +92,8 @@ namespace ProgettoMMDS
             bestTardiness = schedule.getTardiness();
             while (!fine)
             {
-                Parallel.Invoke(() => Start(), () => Start());
+                //Parallel.Invoke(() => Start(), () => Start());
+                Parallel.For(0, parallelThread, i => Start());
                 //array[0].Join();
             }
             //Console.WriteLine(j);
@@ -102,7 +104,7 @@ namespace ProgettoMMDS
         public void Start()
         {
             Schedule currentSchedule;
-            j++;
+            Interlocked.Increment(ref j);
             lock (schedule)
             {
                  currentSchedule = new Schedule(schedule);
