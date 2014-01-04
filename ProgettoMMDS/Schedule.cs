@@ -135,5 +135,15 @@ namespace ProgettoMMDS
         {
             _schedule.Add(job);
         }
+        
+        public override string ToString()
+        {
+            string output = "";
+            for (int i = 0; i < schedule.Count; i++)
+            {
+                output += schedule[i] + " ";
+            }
+            return output;
+        }
     }
 }

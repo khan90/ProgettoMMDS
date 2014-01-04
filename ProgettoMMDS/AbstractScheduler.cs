@@ -23,10 +23,11 @@ namespace ProgettoMMDS
         /// </summary>
         /// <param name="schedule"></param>
         /// <returns></returns>
+        /// MaxIteration prima era 150, prova a diminuire un po'
         protected Schedule LocalSearchBestInsert(Schedule schedule)
         {
             //Variabili dell'algoritmo
-            int maxIterations = 150;
+            int maxIterations = 75;
             int minImprovment = 0;
             int tabuCapacity = 3;
             //Inizializzazione

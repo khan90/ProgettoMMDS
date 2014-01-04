@@ -10,10 +10,10 @@ namespace ProgettoMMDS
     class GeneticScheduler : AbstractScheduler
     {
         int populationCount = 80;
+        int sogliaMutazione = 20;
         List<Schedule> population;
         Schedule schedule;
         int bestTardiness;
-        int validi = 0;
         int iterazioni = 0;
 
         public GeneticScheduler()
@@ -48,7 +48,7 @@ namespace ProgettoMMDS
                 fm.OutputSolution(schedule.schedule);
                 fm.OutputResult(schedule.getTardiness(), elapsedTime.TotalMilliseconds);
                 fm.OutputProva(schedule.schedule, schedule.getTardiness(), elapsedTime.TotalMilliseconds, "Prova");
-                Console.WriteLine("Validi: " + validi + " su " + iterazioni);
+                Console.WriteLine("Iterazioni: " + iterazioni);
                 Console.ReadKey();
             }
         }
@@ -64,9 +64,11 @@ namespace ProgettoMMDS
             {
                 population.Add(new Schedule(jobs));               
             }
+            //Generazione della popolazione iniziale
             Parallel.For(0, populationCount, i => generateInitialSolution(i));
             while (!fine)
             {
+                //Ordino la popolazione in ordine di Tardiness -> Tengo la metà migliore e li accoppio due a due per ottenere altre soluzioni
                 population.Sort((x, y) => x.getTardiness().CompareTo(y.getTardiness()));
                 int currentTardiness = population[0].getTardiness();
                 //Console.WriteLine(currentTardiness);
@@ -75,7 +77,9 @@ namespace ProgettoMMDS
                     schedule = new Schedule(population[0]);
                     bestTardiness = currentTardiness;
                 }
+                //Combino le soluzioni migliori
                 Parallel.For(0, populationCount/2, i => combineSolution(i,(populationCount/2)-i));
+                //Effettuo una mutazione (probabilistica) su tutta la popolazione
                 Parallel.For(0, populationCount, i => mutateSolution(i));
             }
         }
@@ -90,6 +94,44 @@ namespace ProgettoMMDS
 
         private void combineSolution(int first, int second)
         {
+            Schedule currentSchedule = generateChildren(first, second);
+            lock (population[populationCount - first - 1])
+            {
+                population[populationCount - first - 1] = currentSchedule;
+            }
+            
+            currentSchedule = generateChildren(second, first);
+           
+            lock (population[populationCount / 2 + first])
+            {
+                population[populationCount / 2 + first] = currentSchedule;
+            }
+            
+            Interlocked.Increment(ref iterazioni);
+        }
+
+        private void mutateSolution(int index)
+        {
+            lock (population[index])
+            {
+                Random r = new Random();
+                Schedule currentSchedule = population[index];
+                if (r.Next(100) < sogliaMutazione)
+                {
+                    int num1 = r.Next(currentSchedule.Count());
+                    int num2 = r.Next(currentSchedule.Count());
+                    if (!((num1 == num2) || (0 >= currentSchedule.schedule[num1]) || (0 >= currentSchedule.schedule[num2])))
+                    {
+                        currentSchedule.swap(num1, num2);
+                    }
+
+                }
+            }
+        }
+
+
+        private Schedule generateChildren(int first, int second)
+        {
             Random r = new Random();
             //Order Crossover
             //Genero i due punti di taglio
@@ -101,53 +143,60 @@ namespace ProgettoMMDS
                 num1 = num2;
                 num2 = temp;
             }
+            //Nello schedule figlio nel taglio metto gli elmenti di first e fuori second
             Schedule currentSchedule = new Schedule(population[first]);
             Schedule firstSchedule = population[first];
             Schedule secondSchedule = population[second];
-            //QUI devo fare il crossover
+            //bit vector: se gli elementi di second sono all'interno del taglio di first li segno da eliminare (false)
+            bool[] vector = new bool[currentSchedule.Count()];
+            for (int j = 0; j < currentSchedule.Count(); j++)
+            {
+                vector[j] = true;
+            }
+            //Ordinate Crossover
             for (int i = num1; i <= num2; i++)
             {
-                currentSchedule.schedule[i] = secondSchedule.schedule[i];
+                for (int j = 0; j < currentSchedule.Count(); j++)
+                {
+                    if (currentSchedule.schedule[i] == population[second].schedule[j])
+                        vector[j] = false;
+                }
+            }
+            //parte sx
+            int currentIndex = 0;
+            int secondIndex = 0;
+            while (currentIndex < num1)
+            {
+                if (vector[secondIndex])
+                {
+                    currentSchedule.schedule[currentIndex] = population[second].schedule[secondIndex];
+                    currentIndex++;
+                    secondIndex++;
+                }
+                else
+                {
+                    secondIndex++;
+                }
+            }
+            //parte a dx
+            currentIndex = currentSchedule.Count() - 1;
+            secondIndex = currentIndex;
+            while (currentIndex > num2)
+            {
+                if (vector[secondIndex])
+                {
+                    currentSchedule.schedule[currentIndex] = population[second].schedule[secondIndex];
+                    currentIndex--;
+                    secondIndex--;
+                }
+                else
+                {
+                    secondIndex--;
+                }
             }
             currentSchedule = LocalSearchBestInsert(currentSchedule);
-            bool valido = true;
-            for (int i = 0; i < currentSchedule.Count()-1; i++)
-            {
-                for (int j = i+1; j < currentSchedule.Count(); j++)
-                {
-                    if (currentSchedule.schedule[i] == currentSchedule.schedule[j])
-                        valido = false;
-                }
-            }
-            Interlocked.Increment(ref iterazioni);
-            if (valido)
-            {
-                Interlocked.Increment(ref validi);
-                lock (population[populationCount / 2 + first])
-                {
-                    population[populationCount - first - 1] = currentSchedule;
-                }
-            }
-        }
 
-        private void mutateSolution(int index)
-        {
-            Random r = new Random();
-            Schedule currentSchedule = population[index];
-            if (r.Next(100) < 20)
-            {
-                for (int i = 0; i < currentSchedule.Count(); i++)
-                {
-                    int num1 = r.Next(currentSchedule.Count());
-                    int num2 = r.Next(currentSchedule.Count());
-                    if ((num1 == num2) || (0 == currentSchedule.schedule[num1]) || (0 == currentSchedule.schedule[num2]))
-                    {
-                        i--;
-                        continue;
-                    }
-                    currentSchedule.swap(num1, num2);
-                }
-            }
+            return currentSchedule;
         }
 
 
