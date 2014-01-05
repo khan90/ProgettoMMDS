@@ -142,6 +142,8 @@ namespace ProgettoMMDS
                 for (int i = 0; i < currentSchedule.Count(); i++)
                 {
                     int elemento = currentSchedule.schedule[i];
+                    if (elemento <= 0)
+                        elemento = 0;
                     //Traccia dove sono passato
                     traceMatrix[elemento, i] += (5*(bestTardiness)/currentTardiness);
                     //Traccia nelle "vicinanze"

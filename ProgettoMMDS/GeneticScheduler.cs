@@ -9,8 +9,8 @@ namespace ProgettoMMDS
 {
     class GeneticScheduler : AbstractScheduler
     {
-        int populationCount = 80;
-        int sogliaMutazione = 20;
+        int populationCount = 60;
+        int sogliaMutazione = 15;
         List<Schedule> population;
         Schedule schedule;
         int bestTardiness;
@@ -48,15 +48,15 @@ namespace ProgettoMMDS
                 fm.OutputSolution(schedule.schedule);
                 fm.OutputResult(schedule.getTardiness(), elapsedTime.TotalMilliseconds);
                 fm.OutputProva(schedule.schedule, schedule.getTardiness(), elapsedTime.TotalMilliseconds, "Prova");
-                Console.WriteLine("Iterazioni: " + iterazioni);
-                Console.ReadKey();
+                Console.WriteLine("Popolazioni generate: " + iterazioni);
+                //Console.ReadKey();
             }
         }
 
         void genetic(int m, int n)
         {
-            Thread thread = new Thread(new ThreadStart(timer));
-            thread.Start();
+            Thread timerThread = new Thread(new ThreadStart(timer));
+            timerThread.Start();
             schedule = new Schedule(jobs);
             schedule.constructScheduleEDD(m,n);
             bestTardiness = schedule.getTardiness();
@@ -76,11 +76,21 @@ namespace ProgettoMMDS
                 {
                     schedule = new Schedule(population[0]);
                     bestTardiness = currentTardiness;
+                    if (0 == currentTardiness)
+                    {
+                        timerThread.Abort();
+                        fine = true;
+                        return;
+                    }
                 }
                 //Combino le soluzioni migliori
-                Parallel.For(0, populationCount/2, i => combineSolution(i,(populationCount/2)-i));
+                //Console.WriteLine("Combinazione");
+                
+                Parallel.For(0, populationCount / 2 -1, i => combineSolution(i, (populationCount / 2) - i -1));
                 //Effettuo una mutazione (probabilistica) su tutta la popolazione
+                //Console.WriteLine("Mutazione");
                 Parallel.For(0, populationCount, i => mutateSolution(i));
+                Interlocked.Increment(ref iterazioni);
             }
         }
 
@@ -106,8 +116,6 @@ namespace ProgettoMMDS
             {
                 population[populationCount / 2 + first] = currentSchedule;
             }
-            
-            Interlocked.Increment(ref iterazioni);
         }
 
         private void mutateSolution(int index)
@@ -137,6 +145,13 @@ namespace ProgettoMMDS
             //Genero i due punti di taglio
             int num1 = r.Next(schedule.Count());
             int num2 = r.Next(schedule.Count());
+            if (num1 == num2)
+            {
+                if (num1 == schedule.Count() - 1)
+                    num1--;
+                else
+                    num2++;
+            }
             if (num2 < num1)
             {
                 int temp = num1;
@@ -165,7 +180,7 @@ namespace ProgettoMMDS
             //parte sx
             int currentIndex = 0;
             int secondIndex = 0;
-            while (currentIndex < num1)
+            while ((currentIndex < num1) && (secondIndex < currentSchedule.Count()))
             {
                 if (vector[secondIndex])
                 {
@@ -181,7 +196,7 @@ namespace ProgettoMMDS
             //parte a dx
             currentIndex = currentSchedule.Count() - 1;
             secondIndex = currentIndex;
-            while (currentIndex > num2)
+            while ((currentIndex > num2)&&(secondIndex >= 0))
             {
                 if (vector[secondIndex])
                 {

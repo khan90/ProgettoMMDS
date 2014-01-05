@@ -12,8 +12,8 @@ namespace ProgettoMMDS
         /// Lista dei Job in ordine di ID
         /// </summary>
         protected List<Job> jobs = new List<Job>();
-        protected volatile static bool fine = false;
-        protected static long MTIME = 1000;
+        protected volatile bool fine = false;
+        protected static long MTIME = 10000;
 
         public abstract void run(string[] args);
         

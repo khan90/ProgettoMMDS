@@ -111,7 +111,7 @@ namespace ProgettoMMDS
             }
             //Tiro un calcio alla soluzione
             Random r = new Random();
-            for (int i = 0; i < currentSchedule.Count()/10; i++)
+            for (int i = 0; i < currentSchedule.Count()/8; i++)
             {
                 int num1 = r.Next(currentSchedule.Count());
                 int num2 = r.Next(currentSchedule.Count());
