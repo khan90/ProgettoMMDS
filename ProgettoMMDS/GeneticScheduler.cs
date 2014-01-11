@@ -10,7 +10,7 @@ namespace ProgettoMMDS
     class GeneticScheduler : AbstractScheduler
     {
         int populationCount = 60;
-        int sogliaMutazione = 15;
+        int sogliaMutazione = 10;
         List<Schedule> population;
         Schedule schedule;
         int bestTardiness;
@@ -68,6 +68,7 @@ namespace ProgettoMMDS
             Parallel.For(0, populationCount, i => generateInitialSolution(i));
             while (!fine)
             {
+                Parallel.For(0, populationCount, i => mutateSolution(i));
                 //Ordino la popolazione in ordine di Tardiness -> Tengo la metà migliore e li accoppio due a due per ottenere altre soluzioni
                 population.Sort((x, y) => x.getTardiness().CompareTo(y.getTardiness()));
                 int currentTardiness = population[0].getTardiness();
@@ -84,12 +85,9 @@ namespace ProgettoMMDS
                     }
                 }
                 //Combino le soluzioni migliori
-                //Console.WriteLine("Combinazione");
-                
                 Parallel.For(0, populationCount / 2 -1, i => combineSolution(i, (populationCount / 2) - i -1));
-                //Effettuo una mutazione (probabilistica) su tutta la popolazione
+                //Effettuo una mutazione (probabilistica) su tutta la popolazione --> l'ho messa in cima, ma è uguale
                 //Console.WriteLine("Mutazione");
-                Parallel.For(0, populationCount, i => mutateSolution(i));
                 Interlocked.Increment(ref iterazioni);
             }
         }
@@ -114,10 +112,13 @@ namespace ProgettoMMDS
            
             lock (population[populationCount / 2 + first])
             {
-                population[populationCount / 2 + first] = currentSchedule;
+                population[populationCount / 2 + first] = (currentSchedule);
             }
         }
-
+        /// <summary>
+        /// Muta la soluzione facendo uno swap a caso
+        /// </summary>
+        /// <param name="index">Posizione della soluzione che muta</param>
         private void mutateSolution(int index)
         {
             lock (population[index])
@@ -131,6 +132,28 @@ namespace ProgettoMMDS
                     if (!((num1 == num2) || (0 >= currentSchedule.schedule[num1]) || (0 >= currentSchedule.schedule[num2])))
                     {
                         currentSchedule.swap(num1, num2);
+                    }
+
+                }
+            }
+        }
+        /// <summary>
+        /// Muta la soluzione facendo uno swap con un elemento vicino
+        /// </summary>
+        /// <param name="index">Posizione della soluzione che muta</param>
+        private void mutateSolutionNext(int index)
+        {
+            lock (population[index])
+            {
+                Random r = new Random();
+                Schedule currentSchedule = population[index];
+                if (r.Next(100) < sogliaMutazione)
+                {
+                    int num1 = r.Next(currentSchedule.Count()-1);
+
+                    if (!((0 >= currentSchedule.schedule[num1]) || (0 >= currentSchedule.schedule[num1 + 1])))
+                    {
+                        currentSchedule.swap(num1, num1 + 1);
                     }
 
                 }

@@ -13,7 +13,7 @@ namespace ProgettoMMDS
         /// </summary>
         protected List<Job> jobs = new List<Job>();
         protected volatile bool fine = false;
-        protected static long MTIME = 10000;
+        protected static long MTIME = 5000;
 
         public abstract void run(string[] args);
         
@@ -27,9 +27,9 @@ namespace ProgettoMMDS
         protected Schedule LocalSearchBestInsert(Schedule schedule)
         {
             //Variabili dell'algoritmo
-            int maxIterations = 75;
+            int maxIterations = 60;
             int minImprovment = 0;
-            int tabuCapacity = 3;
+            int tabuCapacity = 5;
             //Inizializzazione
             Random r = new Random();
             int maxInt = schedule.Count();
@@ -50,28 +50,26 @@ namespace ProgettoMMDS
                 improvment = 0;
                 //GENERAZIONE JOB ESTRATTO
                 int num1 = r.Next(maxInt);
-                for (int j = 0; j < tabuCapacity; j++)
+                /*for (int j = 0; j < tabuCapacity; j++)
                 {
                     if (num1 == tabuList[j])
                     {
                         j = 0; ;    //Un while non è più elegante!!??!?!?
                         num1 = r.Next(maxInt);
-                        //DA CANCELLARE STAMPA
-                        //Console.WriteLine("Non posso spostare questo elemento");
                     }
-                }
-                // QUi aggiungo l'elemento che ho appena spostato alla tabù List
+                }*/
+                while (tabuList.Contains(num1))
+                    num1 = r.Next(maxInt);
+                // QUi aggiungo l'elemento che ho appena selezionato alla tabù List
                 tabuList[tabuIndex] = num1;
                 tabuIndex = (tabuIndex + 1) % tabuCapacity;
-
                 int num2;
                 for (num2 = 0; num2 < maxInt; num2++)
                 {
-                    if (num2 == num1)   //e se facessimo il controllo su entrambi i numeri se appartengono alla tabù list?
+                    if ((num2 == num1)||(tabuList.Contains(num2)))   //e se facessimo il controllo su entrambi i numeri se appartengono alla tabù list?
                         continue;
                     //SWAP
                     currentSchedule.swap(num1, num2);
-
                     currentTardy = currentSchedule.getTardiness();
                     if ((currentTardy < bestTardy))
                     {
@@ -79,10 +77,9 @@ namespace ProgettoMMDS
                         bestTardy = currentTardy;
                         schedule = new Schedule(currentSchedule);
                     }
-                    else if (r.Next(100) < 5)            //Ogni tanto effettuo uno swap anche se non mi miglioro, ma non salvo la soluzione
+                    else if (r.Next(1000) < 25)      //Ogni tanto effettuo uno swap anche se non mi miglioro, ma non salvo la soluzione
                     {
-                        //num1 = num2;        //Piccola modifica
-                        //IDEA: Qui si può aggiungere una piccola tabù list per evitare che ritorni indietro al passo successivo
+                        num1 = num2;        //Piccola modifica
                         //Console.Write("*");
                         continue;
                     }
