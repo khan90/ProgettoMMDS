@@ -13,7 +13,7 @@ namespace ProgettoMMDS
         static List<Job> jobs = new List<Job>();
         static void Main(string[] args)
         {
-            AbstractScheduler scheduler = new GeneticScheduler();
+            AbstractScheduler scheduler = new GeneticScheduler(10000);
             scheduler.run(args);
 
             //Le formiche non vanno perchè ci ho aggiunto la macchina -1....
