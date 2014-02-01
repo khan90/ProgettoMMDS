@@ -41,7 +41,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AbstracScheduler.cs" />
     <Compile Include="FileManager.cs" />
     <Compile Include="Job.cs" />
     <Compile Include="Program.cs" />

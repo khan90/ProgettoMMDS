@@ -44,84 +44,46 @@ namespace ProgettoMMDS
                 DateTime startTime = DateTime.Now;
 
                
-
+                //AGGIUNTA JOB DUMMY: id = numero job +1 , Processing time = massimo pt + 50 , duedate 0
                 jobs.Add(new Job(fm.getNumberofJobs() + 1, fm.getMaxProcessingTime()+50, 0));
-                //List<PartialSolution> pool = new List<PartialSolution>();
                 int lunghezza = fm.getNumberofJobs() + fm.getNumberofMachine();
                 int dummy = fm.getNumberofJobs() + 1;
 
-
-
-                /*for (int k = 0; k <5; k++)
-                {
-                    for (int j = 0; j < lunghezza; j++)
-                    {
-                        for (int i = 0; i < fm.getNumberofJobs()+1; i++)
-                        {
-                            PartialSolution ps = new PartialSolution(i, dummy, j, lunghezza);
-                            ps.Tardiness = getTardiness(ps.getSchedule());
-                            pool.Add(ps);
-                            
-                        }
-                    } 
-                }*/
-
+                //inizializzazione generatore di molecole
                 Generator gen = new Generator(jobs, fm.getNumberofMachine());
-                
-                PartialSolution ps1 = gen.makePartialSolution(3, 0);
-                PartialSolution ps2 = gen.makePartialSolution(2, 1);
-                PartialSolution ps3 = gen.makePartialSolution(1, 2);
-                PartialSolution ps4 = gen.makePartialSolution(0, 3);
-                PartialSolution ps5 = gen.makePartialSolution(5, 4);
-                PartialSolution ps6 = gen.makePartialSolution(4, 5);
-                PartialSolution ps7 = gen.makePartialSolution(7, 7);
 
-                PartialSolution ps10 = gen.makePartialSolution(1, 0);
-                PartialSolution ps20 = gen.makePartialSolution(3, 2);
-                PartialSolution ps30 = gen.makePartialSolution(4, 3);
-                PartialSolution ps40 = gen.makePartialSolution(10, 4);
-                PartialSolution ps50 = gen.makePartialSolution(14, 5);
-                PartialSolution ps60 = gen.makePartialSolution(2, 6);
-                PartialSolution ps70 = gen.makePartialSolution(0, 7);
+                List<PartialSolution> pool = new List<PartialSolution>();
 
-                PartialSolution qps1 = gen.mergeSolution(ps1, ps2);
-                PartialSolution qps2 = gen.mergeSolution(qps1, ps3);
-                PartialSolution qps3 = gen.mergeSolution(qps2, ps4);
-                PartialSolution qps4 = gen.mergeSolution(qps3, ps5);
-                PartialSolution qps5 = gen.mergeSolution(qps4, ps6);
-                PartialSolution qps6 = gen.mergeSolution(qps5, ps7);
-
-                PartialSolution qps10 = gen.mergeSolution(ps10, ps20);
-                PartialSolution qps20 = gen.mergeSolution(qps10, ps30);
-                PartialSolution qps30 = gen.mergeSolution(qps20, ps40);
-                PartialSolution qps40 = gen.mergeSolution(qps30, ps50);
-                PartialSolution qps50 = gen.mergeSolution(qps40, ps60);
-                PartialSolution qps60 = gen.mergeSolution(qps50, ps70);
-
-
-                Console.WriteLine(qps6.ToString());
-                Console.WriteLine(qps60.ToString());
-
-                PartialSolution ps = gen.mergeSolution(qps6, qps60);
-                Console.WriteLine(ps.ToString());
-                PartialSolution[] ps67 = gen.separate(ps);
-                Console.WriteLine(ps67[0].ToString());
-                Console.WriteLine(ps67[1].ToString());
-
-
-                /*
-                PartialSolution ps5 = gen.mergeSolution(ps1,ps3);
-                Console.WriteLine(ps5.ToString());
-                PartialSolution[] ps67 = gen.separate(ps5);
-                Console.WriteLine(ps67[0].ToString());
-                Console.WriteLine(ps67[1].ToString());
-                /*
-                for (int i = 0; i < pool.Count; i++)
+                for (int k = 0; k < 5; k++)
                 {
-                   // Console.WriteLine(pool[i].ToString());
-                    Console.WriteLine(pool[i].Tardiness);
+                    
+                    for (int i = 0; i < fm.getNumberofJobs() + fm.getNumberofMachine() -1 ; i++)
+                    {
+                        for (int j = 0; j <= fm.getNumberofJobs(); j++)
+                        {
+                            pool.Add(gen.makePartialSolution(j, i));
+                        }
+                    }
                 }
-                //*/
+
+                Random r = new Random();
+                int index;
+                PartialSolution[] p;
+                do
+                {
+                    index = r.Next(pool.Count);
+                    PartialSolution molecola1 = pool[index];
+                    pool.RemoveAt(index);
+                    index = r.Next(pool.Count);
+                    PartialSolution molecola2 = pool[index];
+                    pool.RemoveAt(index);
+                    p = gen.separate(gen.mergeSolution(molecola1, molecola2));
+                    pool.Add(p[0]);
+                    pool.Add(p[1]);
+                    Console.WriteLine(p[0].ToString());
+                   // Console.WriteLine(p[1].Tardiness);
+                } while(!p[0].isComplete());
+               
                 
                 /*
                 

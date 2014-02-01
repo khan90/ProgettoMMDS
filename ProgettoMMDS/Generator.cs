@@ -13,6 +13,7 @@ namespace ProgettoMMDS
         int macchine; 
         int dummy;
         ulong[] MASKS;
+        ulong COMPLETEMASK;
         int lunghezzaSch;
 
         public Generator(List<Job> istanza, int NumberMachine)
@@ -20,7 +21,7 @@ namespace ProgettoMMDS
             jobs= istanza;
             macchine = NumberMachine;
             dummy = jobs.Count;
-            MASKS = generateMasks();
+            generateMasks();
             lunghezzaSch = jobs.Count + macchine - 1;
             
         }
@@ -121,7 +122,6 @@ namespace ProgettoMMDS
                 {
                     if (job == 0)
                     {
-                        Console.WriteLine("MACCHINA");
                         if (m1 < macchine)
                         {
                             schedule1.Add(job);
@@ -159,9 +159,12 @@ namespace ProgettoMMDS
                     }
                 }
             }
+            bool c1 = (mask1 == COMPLETEMASK) ? true : false;
+            bool c2 = (mask2 == COMPLETEMASK) ? true : false;
+
             t1 = getTardiness(schedule1);
             t2 = getTardiness(schedule2);
-            return new PartialSolution[] { new PartialSolution(schedule1, mask1, t1), new PartialSolution(schedule2, mask2, t2) };
+            return new PartialSolution[] { new PartialSolution(schedule1, mask1, t1,c1), new PartialSolution(schedule2, mask2, t2,c2) };
         }
 
 
@@ -212,17 +215,20 @@ namespace ProgettoMMDS
             return -1;
         }
         
-        private ulong[] generateMasks()
+        private void generateMasks()
         {
             ulong one = 1UL;
-            ulong[] retval=new ulong[64];
+            MASKS=new ulong[64];
+            COMPLETEMASK = 0;
  	        for(int i= 64-1 ;i>=0 ; i--)
             {
-			    retval[i]=one;
+			    MASKS[i]=one;
+                if(i< lunghezzaSch-1)
+                    COMPLETEMASK = COMPLETEMASK | one;
                 one=one<<1;
+                
                // Console.WriteLine(i+":"+Convert.ToString((long)retval[i],2));
             }
-            return retval;
         }
 
     }

@@ -36,6 +36,8 @@ namespace ProgettoMMDS
                 _tardiness = value;
             }
         }
+
+        bool _complete;
         /// <summary>
         /// Restituisce lo schedule della PartialSolution
         /// </summary>
@@ -57,16 +59,21 @@ namespace ProgettoMMDS
         /// <param name="schedule"></param>
         /// <param name="mask"></param>
         /// <param name="tardiness"></param>
-        public PartialSolution(List<int> schedule, ulong mask, int tardiness)
+        public PartialSolution(List<int> schedule, ulong mask, int tardiness, bool complete = false)
         {
             _schedule = schedule;
             Mask = mask;
             Tardiness = tardiness;
+            _complete = complete;
         }
 
 
         
-
+        public bool isComplete()
+        {
+            return _complete;
+        }
+       
  
         public override String ToString()
         {
@@ -75,7 +82,7 @@ namespace ProgettoMMDS
 			{
 			    ret+=_schedule[i]+"|";
 			}
-            ret += "\nTardiness:" + _tardiness + " Mask:"+_mask;
+            ret += "\nTardiness:" + _tardiness + " Mask:"+_mask + " " + _complete;
             return (ret);
         }
         
