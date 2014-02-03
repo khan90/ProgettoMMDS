@@ -62,6 +62,9 @@ namespace ProgettoMMDS
 #endif
             }catch(FileNotFoundException fnfe)
             {
+#if (DEBUG)
+                Console.WriteLine(fnfe.StackTrace);
+#endif
                 Console.WriteLine("File non Trovato\nPremere un tasto qualsiasi : \n");
                 Console.ReadKey();
                 Environment.Exit(0);
@@ -75,7 +78,7 @@ namespace ProgettoMMDS
             OutputSolution(schedule);
         }
         /// <summary>
-        /// Crea un file txt con la soluzione
+        /// Crea un file .sol con la soluzione
         /// </summary>
         /// <param name="schedule"></param>
         public void OutputSolution(List<int> schedule)
@@ -98,6 +101,31 @@ namespace ProgettoMMDS
             }
             stream.Close();
         }
+
+        /// <summary>
+        /// Crea un file .sol con la soluzione nel formato xx_yy_zz_iii_<paramref name="RUN">RUN</paramref>.sol
+        /// </summary>
+        /// <param name="schedule">schedule ottenuto</param>
+        /// <param name="RUN">Numero della Run</param>
+        public void OutputSolution(List<int> schedule, int RUN)
+        {
+            string filename = _path.Substring(0, _path.Length - 4);
+            StreamWriter stream = System.IO.File.CreateText(filename + "_" + RUN + ".sol");
+            //  StreamWriter stream = System.IO.File.AppendText();
+            for (int i = 0; i < schedule.Count; i++)
+            {
+                if (schedule[i] <= 0)
+                {
+                    stream.Write("\r");
+                }
+                else
+                {
+                    stream.Write(schedule[i] + "\t");
+                }
+            }
+            stream.Close();
+        }
+
         /// <summary>
         /// Aggiunge al file Risultati.txt l'esecuzione
         /// </summary>
@@ -108,6 +136,23 @@ namespace ProgettoMMDS
             string filename = _path.Substring(0, _path.Length - 4);
             StreamWriter stream = System.IO.File.AppendText(RISULTATI);
             string output = filename + "\t" + tardiness + "\t" + executionTime;
+            stream.WriteLine(output);
+            stream.Close();
+        }
+
+        /// <summary>
+        /// Aggiunge al file Risultati.txt l'esecuzione nella sottocartella <paramref name="RUN">RUN</paramref>
+        /// </summary>
+        /// <param name="tardiness">Valore della tardiness</param>
+        /// <param name="executionTime">Tempo di esecuzione</param>
+        /// <param name="RUN">Numero della Run</param>
+        public void OutputResult(int tardiness, double executionTime, int RUN)
+        {
+            string filename = _path.Substring(0, _path.Length - 4);
+            DirectoryInfo di = Directory.CreateDirectory(RUN.ToString());
+            String pathString = System.IO.Path.Combine(RUN.ToString(), RISULTATI);
+            StreamWriter stream = System.IO.File.AppendText(pathString);
+            string output = filename + "\t" + tardiness + "\t" + (int)executionTime;
             stream.WriteLine(output);
             stream.Close();
         }

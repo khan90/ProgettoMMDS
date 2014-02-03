@@ -25,12 +25,16 @@ namespace ProgettoMMDS
         {
             population = new List<Schedule>();
         }
-
+        /// <summary>
+        /// Istanza di uno scheduler che utilizza un algoritmo genetico e un numero di secondi <paramref name="time"> time </paramref>
+        /// </summary>
+        /// <param name="time">Numero di secondi per l'algoritmo genetico</param>
         public GeneticScheduler(int time)
         {
             population = new List<Schedule>();
             MTIME = time;
         }
+
         public override void run(string[] args)
         {
             if (!(args.Length > 0))
@@ -44,6 +48,15 @@ namespace ProgettoMMDS
                 FileManager fm = new FileManager(args[0]);
                 jobs = (fm.getJobsList());
                 //INIZIO CONTEGGIO SECONDI
+                if (args.Length > 1)
+                {
+                    MTIME = int.Parse(args[1]) * 1000;
+                }
+                if (args.Length > 2)
+                {
+                    RUN = int.Parse(args[2]);
+                }                
+
                 DateTime startTime = DateTime.Now;
                 //QUI l'algoritmo di ricerca del minimo ->
                 genetic(fm.getNumberofMachine(), fm.getNumberofJobs());
@@ -52,14 +65,15 @@ namespace ProgettoMMDS
                 //FINE CONTEGGIO SECONDI
                 DateTime stopTime = DateTime.Now;
                 TimeSpan elapsedTime = stopTime.Subtract(startTime);
+                double timeToWrite = elapsedTime.TotalMilliseconds;
                 //Stampa Tardiness e tempo totale
                 Console.WriteLine("Tardiness totale: " + schedule.getTardiness().ToString());
-                Console.WriteLine("Arrivato in " + elapsedTime.TotalMilliseconds + " ms");
-
+                Console.WriteLine("Arrivato in " + timeToWrite + " ms");
+                
                 //OUTPUT
-                fm.OutputSolution(schedule.schedule);
-                fm.OutputResult(schedule.getTardiness(), elapsedTime.TotalMilliseconds);
-                fm.OutputProva(schedule.schedule, schedule.getTardiness(), elapsedTime.TotalMilliseconds, "Prova");
+                fm.OutputSolution(schedule.schedule,RUN);
+                fm.OutputResult(schedule.getTardiness(), timeToWrite, RUN);
+                //fm.OutputProva(schedule.schedule, schedule.getTardiness(), timeToWrite, "Prova");
                 Console.WriteLine("Popolazioni generate: " + iterazioni);
                 //Console.ReadKey();
             }
@@ -124,7 +138,7 @@ namespace ProgettoMMDS
                 population[populationCount - first - 1] = currentSchedule;
             }
             //genero il secondo figlio che metto nella prima casella libera della seconda metà della popolazione.
-            currentSchedule = generateChildren(second, first);           
+            currentSchedule = generateChildren2(second, first);           
             lock (population[populationCount / 2 + first])
             {
                 population[populationCount / 2 + first] = (currentSchedule);
@@ -206,6 +220,84 @@ namespace ProgettoMMDS
             Schedule currentSchedule = new Schedule(population[first]);
             Schedule firstSchedule = population[first];
             Schedule secondSchedule = population[second];
+            //bit vector: se gli elementi di second sono all'interno del taglio di first li segno da eliminare (false)
+            bool[] vector = new bool[currentSchedule.Count()];
+            for (int j = 0; j < currentSchedule.Count(); j++)
+            {
+                vector[j] = true;
+            }
+            //Ordinate Crossover
+            for (int i = num1; i <= num2; i++)
+            {
+                for (int j = 0; j < currentSchedule.Count(); j++)
+                {
+                    if (currentSchedule.schedule[i] == population[second].schedule[j])
+                        vector[j] = false;
+                }
+            }
+            //parte sx
+            int currentIndex = 0;
+            int secondIndex = 0;
+            while ((currentIndex < num1) && (secondIndex < currentSchedule.Count()))
+            {
+                if (vector[secondIndex])
+                {
+                    currentSchedule.schedule[currentIndex] = population[second].schedule[secondIndex];
+                    currentIndex++;
+                    secondIndex++;
+                }
+                else
+                {
+                    secondIndex++;
+                }
+            }
+            //parte a dx
+            currentIndex = currentSchedule.Count() - 1;
+            secondIndex = currentIndex;
+            while ((currentIndex > num2)&&(secondIndex >= 0))
+            {
+                if (vector[secondIndex])
+                {
+                    currentSchedule.schedule[currentIndex] = population[second].schedule[secondIndex];
+                    currentIndex--;
+                    secondIndex--;
+                }
+                else
+                {
+                    secondIndex--;
+                }
+            
+            }
+            currentSchedule = LocalSearchBestInsert(currentSchedule);
+            return currentSchedule;
+        }
+        //Piccola modifica considerando le macchine
+        private Schedule generateChildren2(int first, int second)
+        {
+            Schedule currentSchedule = new Schedule(population[first]);
+            Schedule firstSchedule = population[first];
+            Schedule secondSchedule = population[second];
+            Random r = new Random();
+            //Order Crossover
+            //Genero i due punti di taglio
+            int num1 = r.Next(schedule.Count());
+            int num2 = num1;
+            for (int i = num1; i < schedule.Count(); i++)
+            {
+                if ((i == schedule.Count() - 1) || (firstSchedule.schedule[i + 1] <= 0) || (secondSchedule.schedule[i + 1] <= 0))
+                {
+                    num2 = i;
+                }
+            }
+            if (num1 == num2)
+            {
+                if (num1 == schedule.Count() - 1)
+                    num1--;
+                else
+                    num2++;
+            }
+
+            //Nello schedule figlio nel taglio metto gli elmenti di first e fuori second
             //bit vector: se gli elementi di second sono all'interno del taglio di first li segno da eliminare (false)
             bool[] vector = new bool[currentSchedule.Count()];
             for (int j = 0; j < currentSchedule.Count(); j++)
