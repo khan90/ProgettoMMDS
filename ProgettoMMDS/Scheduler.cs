@@ -59,31 +59,85 @@ namespace ProgettoMMDS
                     
                     for (int i = 0; i < fm.getNumberofJobs() + fm.getNumberofMachine() -1 ; i++)
                     {
-                        for (int j = 0; j <= fm.getNumberofJobs(); j++)
+                        for (int j = 0; j <
+                             fm.getNumberofJobs(); j++)
                         {
                             pool.Add(gen.makePartialSolution(j, i));
                         }
                     }
                 }
-
                 Random r = new Random();
-                int index;
-                PartialSolution[] p;
-                do
-                {
-                    index = r.Next(pool.Count);
-                    PartialSolution molecola1 = pool[index];
-                    pool.RemoveAt(index);
-                    index = r.Next(pool.Count);
-                    PartialSolution molecola2 = pool[index];
-                    pool.RemoveAt(index);
-                    p = gen.separate(gen.mergeSolution(molecola1, molecola2));
-                    pool.Add(p[0]);
-                    pool.Add(p[1]);
-                    Console.WriteLine(p[0].ToString());
-                   // Console.WriteLine(p[1].Tardiness);
-                } while(!p[0].isComplete());
+                int index1;
+                int index2;
+                List<PartialSolution> p;
+                PartialSolution molecola1;
+                PartialSolution molecola2;
+                PartialSolution union;
+                int it = 0;
                
+
+                ///PARAM
+                int greedy = 20;
+                do
+                { 
+                    int z = 0;
+                    pool.Sort((x, y) => (y.Tardiness.CompareTo(x.Tardiness)));
+                    do
+                    {
+                        index1 = r.Next(greedy);
+                        molecola1 = pool[index1];
+                       
+                        do
+                        {
+                            index2 = r.Next(pool.Count-1);
+                            
+                        } while ((index1 == index2));
+                        
+                        molecola2 = pool[index2];
+
+                           z++;
+                    } while ((z < 100) && !(gen.feasible(molecola1, molecola2)));
+                    if(!(z<100))
+                    {
+                        System.Console.WriteLine("Errore");
+                        greedy++;
+                        continue;
+                    }
+                    pool.RemoveAt(index1);
+                    pool.RemoveAt(index2);
+                    //UNION
+                    Console.WriteLine(it+" Unisco "+ pool.Count);
+                    union = gen.mergeSolution(molecola1,molecola2);
+                    pool.Add(union);
+                    //SEPARATION
+                    if (r.Next(100) <= 5)
+                    {
+                        Console.WriteLine("Separo");
+                        index1 = r.Next(pool.Count);
+                        PartialSolution mol = pool[index1];
+                       // Console.WriteLine(pool[pool.Count-1].ToString());
+                         p = gen.separateAtom(mol);
+                         //pool.AddRange(p);
+                       //  Console.WriteLine(pool[pool.Count-1].ToString());
+                        for(int d =0; d< p.Count;d++)
+                        {
+                            pool.Add(p[d]);
+                        }
+                      
+                    }
+
+
+
+                  //  Console.WriteLine(union.Tardiness);
+                    it++;
+                  /*  if(it == 398)
+                    {
+                        break;
+                    }*/
+                   // Console.WriteLine(p[1].Tardiness);
+                }while(it<10000);
+                for (int i = pool.Count - 20; i < pool.Count; i++)
+                    Console.WriteLine(pool[i].ToString());
                 
                 /*
                 

@@ -10,9 +10,9 @@ namespace ProgettoMMDS
     class PartialSolution
     {
         List<int> _schedule;
-        ulong _mask; //64bit-->     0 se dummy 
+        uint _mask;  //32bit-->     0 se dummy 
                      //             1 se job è presente
-        public ulong Mask
+        public uint Mask
         {
             get
             {
@@ -23,7 +23,34 @@ namespace ProgettoMMDS
                 _mask = value;
             }
         }
-      
+
+        uint _jobmask;
+        public uint JobMask
+        {
+            get
+            {
+                return _jobmask;
+            }
+            set
+            {
+                _jobmask = value;
+            }
+        }
+
+        public int _machine;
+        public int Machine
+        {
+            get
+            {
+                return _machine;
+            }
+            set
+            {
+                _machine = value;
+            }
+        }
+
+        
         int _tardiness;
         public int Tardiness
         {
@@ -59,10 +86,12 @@ namespace ProgettoMMDS
         /// <param name="schedule"></param>
         /// <param name="mask"></param>
         /// <param name="tardiness"></param>
-        public PartialSolution(List<int> schedule, ulong mask, int tardiness, bool complete = false)
+        public PartialSolution(List<int> schedule, uint mask, uint jobmask , int machine,int tardiness, bool complete = false)
         {
             _schedule = schedule;
             Mask = mask;
+            JobMask = jobmask;
+            Machine = machine;
             Tardiness = tardiness;
             _complete = complete;
         }
