@@ -37,7 +37,7 @@ namespace ProgettoMMDS
                 //N : numero di Jobs;
                 //M : numero di macchine;
 
-                char[] charSeparators = new char[] { ' ' };
+                char[] charSeparators = new char[] { ' ', '\t' };
                 String[] token = lines[3].Split(charSeparators, StringSplitOptions.RemoveEmptyEntries);
                 numberofJob = int.Parse(token[0]);
                 numberofMachine = int.Parse(token[1]);
