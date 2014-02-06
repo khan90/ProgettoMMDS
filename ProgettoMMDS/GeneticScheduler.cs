@@ -46,8 +46,7 @@ namespace ProgettoMMDS
             else
             {
                 FileManager fm = new FileManager(args[0]);
-                jobs = (fm.getJobsList());
-                //INIZIO CONTEGGIO SECONDI
+                jobs = (fm.getJobsList());                
                 if (args.Length > 1)
                 {
                     MTIME = int.Parse(args[1]) * 1000;
@@ -55,8 +54,8 @@ namespace ProgettoMMDS
                 if (args.Length > 2)
                 {
                     RUN = int.Parse(args[2]);
-                }                
-
+                }
+                //INIZIO CONTEGGIO SECONDI
                 DateTime startTime = DateTime.Now;
                 //QUI l'algoritmo di ricerca del minimo ->
                 genetic(fm.getNumberofMachine(), fm.getNumberofJobs());
@@ -81,9 +80,12 @@ namespace ProgettoMMDS
 
         void genetic(int m, int n)
         {
+            //Qui parte il thread che conta i secondi
             Thread timerThread = new Thread(new ThreadStart(timer));
             timerThread.Start();
+
             Console.WriteLine("Popolazione:" + populationCount);
+            
             schedule = new Schedule(jobs);
             schedule.constructScheduleEDD(m,n);
             bestTardiness = schedule.getTardiness();
@@ -99,6 +101,7 @@ namespace ProgettoMMDS
                 population.Sort((x, y) => x.getTardiness().CompareTo(y.getTardiness()));
                 int currentTardiness = population[0].getTardiness();
                 //Console.WriteLine(currentTardiness);
+                //Console.WriteLine(population[79].getTardiness());
                 if (currentTardiness < bestTardiness)
                 {
                     schedule = new Schedule(population[0]);
@@ -114,7 +117,8 @@ namespace ProgettoMMDS
                 Parallel.For(0, populationCount / 2 -1, i => combineSolution(i, (populationCount / 2) - i -1));
                 //Effettuo una mutazione (probabilistica) su tutta la popolazione --> l'ho messa in cima, ma è uguale
                 //Console.WriteLine("Mutazione");
-                Parallel.For(1, populationCount, i => mutateSolutionNext(i));
+                //Parallel.For(1, populationCount, i => mutateSolutionNext(i));
+                Parallel.For(1, populationCount, i => mutateSolutionKick(i));
                 //Parallel.For(populationCount/2, populationCount, i => mutateSolution(i));
                 Interlocked.Increment(ref iterazioni);
             }
@@ -124,7 +128,10 @@ namespace ProgettoMMDS
         {
             lock (population[i])
             {
-                population[i] = LocalSearchBestInsert(schedule);
+                //QUESTA FUNZIONA
+                //population[i] = LocalSearchBestInsert(schedule);
+                //PROVA -> le popolazioni iniziali sono generate con una multistart -> do un calcio alla popolazione prima di fare la local Search!
+                population[i] = LocalSearchBestInsert(kick(schedule));
                 //population[i] = new Schedule(schedule);
             }
         }
@@ -166,6 +173,24 @@ namespace ProgettoMMDS
 
                 }
                 currentSchedule = LocalSearchBestInsert(currentSchedule);
+            }
+        }
+
+        private void mutateSolutionKick(int index)
+        {
+            lock (population[index])
+            {
+                Random r = new Random();
+                Schedule currentSchedule = population[index];
+                int number = r.Next(100);
+                if (number < 1)
+                {                    
+                    currentSchedule = LocalSearchBestInsert(kick(currentSchedule));
+                }
+                else if(number < sogliaMutazione)
+                {
+                    mutateSolutionNext(index);
+                }
             }
         }
 
@@ -347,6 +372,24 @@ namespace ProgettoMMDS
             
             }
             currentSchedule = LocalSearchBestInsert(currentSchedule);
+            return currentSchedule;
+        }
+
+        private Schedule kick(Schedule aSchedule)
+        {
+            Schedule currentSchedule = new Schedule(aSchedule);
+            Random r = new Random();
+            for (int i = 0; i < currentSchedule.Count() / 8; i++)
+            {
+                int num1 = r.Next(currentSchedule.Count());
+                int num2 = r.Next(currentSchedule.Count());
+                if ((num1 == num2) || (0 >= currentSchedule.schedule[num1]) || (0 >= currentSchedule.schedule[num2]))
+                {
+                    i--;
+                    continue;
+                }
+                currentSchedule.swap(num1, num2);
+            }
             return currentSchedule;
         }
 

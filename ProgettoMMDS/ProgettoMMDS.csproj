@@ -61,7 +61,6 @@
     <Compile Include="AbstractScheduler.cs" />
     <Compile Include="FileManager.cs" />
     <Compile Include="GeneticScheduler.cs" />
-    <Compile Include="GreedyAntsScheduler.cs" />
     <Compile Include="Job.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
