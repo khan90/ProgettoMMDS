@@ -15,6 +15,7 @@ namespace ProgettoMMDS
         protected volatile bool fine = false;
         protected static int MTIME = 1000;
         protected static int RUN = 0;
+        protected volatile bool fine2 = false;
 
         public abstract void run(string[] args);
 
@@ -174,9 +175,16 @@ namespace ProgettoMMDS
 
         protected void timer()
         {
-            Console.WriteLine("Counter partito");
+            Console.WriteLine("Counter partito 1");
             Thread.Sleep(MTIME);
             fine = true;
+        }
+
+        protected void timer2()
+        {
+            Console.WriteLine("Counter partito 2");
+            Thread.Sleep(MTIME/10);
+            fine2 = true;
         }
     }
 }

@@ -16,6 +16,11 @@ namespace ProgettoMMDS
         int bestTardiness;
         int j = 0;
         int parallelThread = 4;
+        public Scheduler(int time)
+        {
+            MTIME = time;
+        }
+
         public override void run(string[] args)
         {
             if (!(args.Length > 0))

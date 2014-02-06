@@ -350,7 +350,5 @@ namespace ProgettoMMDS
             return currentSchedule;
         }
 
-
-
     }
 }
