@@ -177,6 +177,25 @@ namespace ProgettoMMDS
             stream.Close();
         }
 
+        public void OutputPopolation(List<Schedule> population)
+        {
+            string filename = _path.Substring(0, _path.Length - 4);
+            StreamWriter stream = System.IO.File.CreateText("popolazione.csv");
+            //  StreamWriter stream = System.IO.File.AppendText();
+
+            foreach (Schedule schedule in population){
+                string output = "";
+                for (int i = 0; i < schedule.schedule.Count; i++)
+                {
+                    output += schedule.schedule[i] + " ";
+                }
+                output += ";" + schedule.getTardiness();
+                stream.WriteLine(output);
+            }
+            
+            stream.Close();
+        }
+
         public int getNumberofMachine()
         {
             return numberofMachine;

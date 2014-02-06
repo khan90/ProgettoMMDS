@@ -72,6 +72,9 @@ namespace ProgettoMMDS
                 //OUTPUT
                 fm.OutputSolution(schedule.schedule,RUN);
                 fm.OutputResult(schedule.getTardiness(), timeToWrite, RUN);
+                //Stampa della popolazione ( la metto in ordine prima di stampare)
+                population.Sort((x, y) => x.getTardiness().CompareTo(y.getTardiness()));
+                fm.OutputPopolation(population);
                 //fm.OutputProva(schedule.schedule, schedule.getTardiness(), timeToWrite, "Prova");
                 Console.WriteLine("Popolazioni generate: " + iterazioni);
                 //Console.ReadKey();
@@ -118,6 +121,7 @@ namespace ProgettoMMDS
                 //Effettuo una mutazione (probabilistica) su tutta la popolazione --> l'ho messa in cima, ma è uguale
                 //Console.WriteLine("Mutazione");
                 //Parallel.For(1, populationCount, i => mutateSolutionNext(i));
+                //Mutazione della soluzione con il calcio
                 Parallel.For(1, populationCount, i => mutateSolutionKick(i));
                 //Parallel.For(populationCount/2, populationCount, i => mutateSolution(i));
                 Interlocked.Increment(ref iterazioni);
@@ -138,6 +142,26 @@ namespace ProgettoMMDS
 
         private void combineSolution(int first, int second)
         {
+            //se sono uguali i due genitori è inutile combinare le soluzioni. Salto o Calcio?
+            bool uguali = true;
+            for (int i = 0; i < population[0].Count(); i++)
+            {
+                if (population[first].schedule[i] != population[second].schedule[i])
+                    uguali = false;
+            }
+            if (uguali)
+            {
+                lock (population[populationCount - first - 1])
+                {
+                    population[populationCount - first - 1] = LocalSearchBestInsert(kick(population[first]));
+                    //population[populationCount - first - 1] = LocalSearchBestInsert(population[first]);
+                }
+                lock (population[populationCount / 2 + first])
+                {
+                    population[populationCount / 2 + first] = LocalSearchBestInsert(kick(population[second]));
+                }
+                return;
+            }            
             //Genero il primo figlio che metto nella ultima posizione libera della popolazione
             Schedule currentSchedule = generateChildren(first, second);
             lock (population[populationCount - first - 1])
@@ -185,7 +209,7 @@ namespace ProgettoMMDS
                 int number = r.Next(100);
                 if (number < 1)
                 {                    
-                    currentSchedule = LocalSearchBestInsert(kick(currentSchedule));
+                    currentSchedule = LocalSearchBestInsert(kick(currentSchedule), 150);
                 }
                 else if(number < sogliaMutazione)
                 {

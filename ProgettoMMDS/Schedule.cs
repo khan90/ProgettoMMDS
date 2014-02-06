@@ -8,6 +8,8 @@ namespace ProgettoMMDS
 {
     public class Schedule
     {
+        int _tardiness;
+
         List<int> _schedule;
         public List<int> schedule
         {
@@ -34,11 +36,13 @@ namespace ProgettoMMDS
         {
             _jobs = new List<Job>(arg1);
             _schedule = new List<int>();
+            _tardiness = -1;
         }
         public Schedule(Schedule scheduleToCopy)
         {
             _schedule = new List<int>(scheduleToCopy.schedule);
             _jobs = scheduleToCopy.jobs;
+            _tardiness = -1;
         }
 
         /// <summary>
@@ -93,6 +97,10 @@ namespace ProgettoMMDS
         /// <returns>Tardiness totale</returns>
         public int getTardiness()
         {
+            if (_tardiness != -1)
+            {
+                return _tardiness;
+            }
             int time = 0;
             int tardiness = 0;
 
@@ -110,6 +118,7 @@ namespace ProgettoMMDS
                     }
                 }
             }
+            //_tardiness = tardiness;
             return (tardiness);
         }
         /// <summary>
@@ -123,6 +132,7 @@ namespace ProgettoMMDS
         }
 
         public void swap(int num1, int num2){
+            _tardiness = -1;
             int temp = _schedule[num1];
             _schedule[num1] = _schedule[num2];
             _schedule[num2] = temp;
