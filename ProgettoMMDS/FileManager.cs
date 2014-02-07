@@ -17,6 +17,11 @@ namespace ProgettoMMDS
         private const string RISULTATI = "Risultati.txt";
         private const string PROVE = "Prove.csv";
 
+        public FileManager()
+        {
+            return;
+        }
+
         /// <summary>
         /// Istanzia un  oggetto che estrae le informazioni dal file e genera il file di output !DA FARE
         /// </summary>
@@ -179,7 +184,6 @@ namespace ProgettoMMDS
 
         public void OutputPopolation(List<Schedule> population)
         {
-            string filename = _path.Substring(0, _path.Length - 4);
             StreamWriter stream = System.IO.File.CreateText("popolazione.csv");
             //  StreamWriter stream = System.IO.File.AppendText();
 
@@ -195,6 +199,31 @@ namespace ProgettoMMDS
             
             stream.Close();
         }
+        public void OutputPopolation(List<Schedule> population, string testo)
+        {
+            StreamWriter stream = System.IO.File.CreateText("popolazione" + testo + ".csv");
+            //  StreamWriter stream = System.IO.File.AppendText();
+
+            foreach (Schedule schedule in population)
+            {
+                string output = "";
+                for (int i = 0; i < schedule.schedule.Count; i++)
+                {
+                    output += schedule.schedule[i] + " ";
+                }
+                output += ";" + schedule.getTardiness();
+                stream.WriteLine(output);
+            }
+
+            stream.Close();
+        }
+
+        internal void appendBestTardiness(int currentTardiness)
+        {
+            StreamWriter stream = System.IO.File.AppendText("Popolazioni.csv");
+            stream.WriteLine(currentTardiness);
+            stream.Close();
+        }
 
         public int getNumberofMachine()
         {
@@ -208,5 +237,7 @@ namespace ProgettoMMDS
         {
             return jobsList;
         }
+
+
     }
 }

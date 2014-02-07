@@ -133,6 +133,7 @@ namespace ProgettoMMDS
 
         public void swap(int num1, int num2){
             _tardiness = -1;
+
             int temp = _schedule[num1];
             _schedule[num1] = _schedule[num2];
             _schedule[num2] = temp;

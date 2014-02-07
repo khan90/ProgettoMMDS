@@ -173,7 +173,7 @@ namespace ProgettoMMDS
 
         protected void timer()
         {
-            Console.WriteLine("Counter partito 1");
+            Console.WriteLine("Counter partito: " + MTIME/1000 + "s");
             Thread.Sleep(MTIME);
             fine = true;
         }

@@ -12,8 +12,9 @@ namespace ProgettoMMDS
         //60
         //800
         //Ho provato a mettere se ho più tempo una popolazione più grande con meno iterazioni nella local search, se ho meno tempo popolazione piccola e local search più profonda
-        static float fattore = ((float)MTIME / 10000);
-        int populationCount =(int)(60 + fattore * 200);
+        //static float fattore = ((float)MTIME / 10000);
+        //int populationCount =(int)(60 + fattore * 200);
+        int populationCount = 80;
 
         int sogliaMutazione = 20;
         List<Schedule> population;
@@ -87,7 +88,7 @@ namespace ProgettoMMDS
             Thread timerThread = new Thread(new ThreadStart(timer));
             timerThread.Start();
 
-            Console.WriteLine("Popolazione:" + populationCount);
+            //Console.WriteLine("Popolazione:" + populationCount);
             
             schedule = new Schedule(jobs);
             schedule.constructScheduleEDD(m,n);
@@ -102,9 +103,14 @@ namespace ProgettoMMDS
             {
                 //Ordino la popolazione in ordine di Tardiness -> Tengo la metà migliore e li accoppio due a due per ottenere altre soluzioni
                 population.Sort((x, y) => x.getTardiness().CompareTo(y.getTardiness()));
+                 //CREAZIONE del file con la popolazione iniziale
+                if(iterazioni == 0)
+                    (new FileManager()).OutputPopolation(population, "iniziale");
+                
                 int currentTardiness = population[0].getTardiness();
                 //Console.WriteLine(currentTardiness);
                 //Console.WriteLine(population[79].getTardiness());
+                //(new FileManager()).appendBestTardiness(currentTardiness);
                 if (currentTardiness < bestTardiness)
                 {
                     schedule = new Schedule(population[0]);
@@ -135,7 +141,8 @@ namespace ProgettoMMDS
                 //QUESTA FUNZIONA
                 //population[i] = LocalSearchBestInsert(schedule);
                 //PROVA -> le popolazioni iniziali sono generate con una multistart -> do un calcio alla popolazione prima di fare la local Search!
-                population[i] = LocalSearchBestInsert(kick(schedule));
+                Schedule temp = kick(schedule);
+                population[i] = LocalSearchBestInsert(temp);
                 //population[i] = new Schedule(schedule);
             }
         }
@@ -403,11 +410,31 @@ namespace ProgettoMMDS
         {
             Schedule currentSchedule = new Schedule(aSchedule);
             Random r = new Random();
-            for (int i = 0; i < currentSchedule.Count() / 8; i++)
+            //c'era 8 nel /
+            for (int i = 0; i < currentSchedule.Count() / 4; i++)
             {
                 int num1 = r.Next(currentSchedule.Count());
                 int num2 = r.Next(currentSchedule.Count());
-                if ((num1 == num2) || (0 >= currentSchedule.schedule[num1]) || (0 >= currentSchedule.schedule[num2]))
+                if ((num1 == num2) /*|| (currentSchedule.schedule[num1] <= 0) || (currentSchedule.schedule[num2] <= 0)*/)
+                {
+                    i--;
+                    continue;
+                }
+                currentSchedule.swap(num1, num2);
+            }
+            return currentSchedule;
+        }
+
+        private Schedule kick(Schedule aSchedule, int factor)
+        {
+            Schedule currentSchedule = new Schedule(aSchedule);
+            Random r = new Random();
+            //c'era 8 nel /
+            for (int i = 0; i < factor; i++)
+            {
+                int num1 = r.Next(currentSchedule.Count());
+                int num2 = r.Next(currentSchedule.Count());
+                if ((num1 == num2) /*|| (currentSchedule.schedule[num1] <= 0) || (currentSchedule.schedule[num2] <= 0)*/)
                 {
                     i--;
                     continue;
