@@ -15,6 +15,10 @@ namespace ProgettoMMDS
         {
             AbstractScheduler scheduler = new GeneticScheduler(10000);
             scheduler.run(args);
+
+            scheduler = new GeneticSchedulerMono(10000);
+
+            scheduler.run(args);
             //(new Scheduler()).run(args);
         }
        
