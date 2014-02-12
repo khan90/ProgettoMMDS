@@ -7,9 +7,12 @@ using System.Threading.Tasks;
 
 namespace ProgettoMMDS
 {
-    class GeneticScheduler : AbstractScheduler
+    /// <summary>
+    /// Variante monoThread dell'algoritmo genetico 
+    /// (i commenti estesi sono nella classe parallela)
+    /// </summary>
+    class GeneticSchedulerMono : AbstractScheduler
     {
-        //Numero di individui nella popolazione
         int populationCount = 80;
 
         int sogliaMutazione = 20;
@@ -18,7 +21,7 @@ namespace ProgettoMMDS
         int bestTardiness;
         int iterazioni = 0;
 
-        public GeneticScheduler()
+        public GeneticSchedulerMono()
         {
             population = new List<Schedule>();
         }
@@ -26,7 +29,7 @@ namespace ProgettoMMDS
         /// Istanza di uno scheduler che utilizza un algoritmo genetico e un numero di secondi <paramref name="time"> time </paramref>
         /// </summary>
         /// <param name="time">Numero di secondi per l'algoritmo genetico</param>
-        public GeneticScheduler(int time)
+        public GeneticSchedulerMono(int time)
         {
             population = new List<Schedule>();
             MTIME = time;
@@ -43,7 +46,7 @@ namespace ProgettoMMDS
             else
             {
                 FileManager fm = new FileManager(args[0]);
-                jobs = (fm.getJobsList());                
+                jobs = (fm.getJobsList());
                 if (args.Length > 1)
                 {
                     MTIME = int.Parse(args[1]) * 1000;
@@ -65,22 +68,17 @@ namespace ProgettoMMDS
                 //Stampa Tardiness e tempo totale
                 Console.WriteLine("Tardiness totale: " + schedule.getTardiness().ToString());
                 Console.WriteLine("Arrivato in " + timeToWrite + " ms");
-                
-                //OUTPUT dei risultati
-                fm.OutputSolution(schedule.schedule,RUN);
+
+                //OUTPUT
+                fm.OutputSolution(schedule.schedule, RUN);
                 fm.OutputResult(schedule.getTardiness(), timeToWrite, RUN);
-                //FINE algoritmo -> stampe supplementari:
-                
-                //Stampa della popolazione finale ( la metto in ordine prima di stampare)
+                //Stampa della popolazione ( la metto in ordine prima di stampare)
                 //population.Sort((x, y) => x.getTardiness().CompareTo(y.getTardiness()));
                 //fm.OutputPopolation(population);
-
-                //Stampa di un file di prova per l'analisi
                 //fm.OutputProva(schedule.schedule, schedule.getTardiness(), timeToWrite, "Prova");
-
                 Console.WriteLine("Popolazioni generate: " + iterazioni);
-                //Stampa del numero di popolazioni generate
                 //fm.appendPopulationCount(iterazioni);
+                //Console.ReadKey();
             }
         }
 
@@ -91,27 +89,33 @@ namespace ProgettoMMDS
             timerThread.Start();
 
             //Console.WriteLine("Popolazione:" + populationCount);
-            
+
             schedule = new Schedule(jobs);
-            schedule.constructScheduleEDD(m,n);
+            schedule.constructScheduleEDD(m, n);
             bestTardiness = schedule.getTardiness();
             for (int i = 0; i < populationCount; i++)
             {
-                population.Add(new Schedule(jobs));               
+                population.Add(new Schedule(jobs));
             }
             //Generazione della popolazione iniziale
-            Parallel.For(0, populationCount, i => generateInitialSolution(i));
+            //Parallel.For(0, populationCount, i => generateInitialSolution(i));
+            for (int i = 0; i < populationCount; i++)
+            {
+                generateInitialSolution(i);
+            }
             while (!fine)
             {
                 //Ordino la popolazione in ordine di Tardiness -> Tengo la metà migliore e li accoppio due a due per ottenere altre soluzioni
                 population.Sort((x, y) => x.getTardiness().CompareTo(y.getTardiness()));
-                
-                /* //CREAZIONE del file con la popolazione iniziale (se necessario)
-                if(iterazioni == 0)
+                //CREAZIONE del file con la popolazione iniziale
+                /*
+                if (iterazioni == 0)
                     (new FileManager()).OutputPopolation(population, "iniziale");
                 */
-                //Controllo l'individuo migliore
                 int currentTardiness = population[0].getTardiness();
+                //Console.WriteLine(currentTardiness);
+                //Console.WriteLine(population[79].getTardiness());
+                //(new FileManager()).appendBestTardiness(currentTardiness);
                 if (currentTardiness < bestTardiness)
                 {
                     schedule = new Schedule(population[0]);
@@ -124,11 +128,21 @@ namespace ProgettoMMDS
                     }
                 }
                 //Combino le soluzioni migliori
-                Parallel.For(0, populationCount / 2 -1, i => combineSolution(i, (populationCount / 2) - i -1));
-                //Effettuo una mutazione (probabilistica) su tutta la popolazione
+                //Parallel.For(0, populationCount / 2 - 1, i => combineSolution(i, (populationCount / 2) - i - 1));
+                for (int i = 0; i < populationCount / 2 -1; i++)
+                {
+                    combineSolution(i, (populationCount / 2) - i - 1);
+                }
+                //Effettuo una mutazione (probabilistica) su tutta la popolazione --> l'ho messa in cima, ma è uguale
+                //Console.WriteLine("Mutazione");
+                //Parallel.For(1, populationCount, i => mutateSolutionNext(i));
                 //Mutazione della soluzione con il calcio
-                Parallel.For(1, populationCount, i => mutateSolutionKick(i));
-                //Incremento del numero di iterazioni
+                //Parallel.For(1, populationCount, i => mutateSolutionKick(i));
+                for (int i = 1; i < populationCount; i++)
+                {
+                    mutateSolutionKick(i);
+                }
+                //Parallel.For(populationCount/2, populationCount, i => mutateSolution(i));
                 Interlocked.Increment(ref iterazioni);
             }
         }
@@ -140,16 +154,13 @@ namespace ProgettoMMDS
                 //Le popolazioni iniziali sono generate con una multistart -> do un calcio alla popolazione prima di fare la local Search!
                 Schedule temp = kick(schedule);
                 population[i] = LocalSearchBestInsert(temp);
+                //population[i] = new Schedule(schedule);
             }
         }
-        /// <summary>
-        /// Generazione dei due figli a partire da due genitori
-        /// </summary>
-        /// <param name="first">Indice del primo genitore</param>
-        /// <param name="second">Indice del secondo genitore</param>
+
         private void combineSolution(int first, int second)
         {
-            //se sono uguali i due genitori è inutile combinare le soluzioni. Effettuo un calcio in questo caso
+            //se sono uguali i due genitori è inutile combinare le soluzioni. Salto o Calcio?
             bool uguali = true;
             for (int i = 0; i < population[0].Count(); i++)
             {
@@ -161,13 +172,14 @@ namespace ProgettoMMDS
                 lock (population[populationCount - first - 1])
                 {
                     population[populationCount - first - 1] = LocalSearchBestInsert(kick(population[first]));
+                    //population[populationCount - first - 1] = LocalSearchBestInsert(population[first]);
                 }
                 lock (population[populationCount / 2 + first])
                 {
                     population[populationCount / 2 + first] = LocalSearchBestInsert(kick(population[second]));
                 }
                 return;
-            }            
+            }
             //Genero il primo figlio che metto nella ultima posizione libera della popolazione
             Schedule currentSchedule = generateChildren(first, second);
             lock (population[populationCount - first - 1])
@@ -175,7 +187,7 @@ namespace ProgettoMMDS
                 population[populationCount - first - 1] = currentSchedule;
             }
             //genero il secondo figlio che metto nella prima casella libera della seconda metà della popolazione.
-            currentSchedule = generateChildren2(second, first);           
+            currentSchedule = generateChildren2(second, first);
             lock (population[populationCount / 2 + first])
             {
                 population[populationCount / 2 + first] = (currentSchedule);
@@ -205,10 +217,7 @@ namespace ProgettoMMDS
                 currentSchedule = LocalSearchBestInsert(currentSchedule);
             }
         }
-        /// <summary>
-        /// Muta la soluzione facendo uno swap a caso dopo un calcio
-        /// </summary>
-        /// <param name="index">Posizione della soluzione che muta</param>
+
         private void mutateSolutionKick(int index)
         {
             lock (population[index])
@@ -217,10 +226,10 @@ namespace ProgettoMMDS
                 Schedule currentSchedule = population[index];
                 int number = r.Next(100);
                 if (number < 1)
-                {                    
+                {
                     currentSchedule = LocalSearchBestInsert(kick(currentSchedule), 150);
                 }
-                else if(number < sogliaMutazione)
+                else if (number < sogliaMutazione)
                 {
                     mutateSolutionNext(index);
                 }
@@ -239,10 +248,10 @@ namespace ProgettoMMDS
                 Schedule currentSchedule = population[index];
                 if (r.Next(100) < sogliaMutazione)
                 {
-                    int num1 = r.Next(currentSchedule.Count()-1);
-                                     
+                    int num1 = r.Next(currentSchedule.Count() - 1);
+
                     currentSchedule.swap(num1, num1 + 1);
-                    
+
                 }
             }
         }
@@ -284,7 +293,7 @@ namespace ProgettoMMDS
             {
                 vector[j] = true;
             }
-            //Order Crossover
+            //Ordinate Crossover
             for (int i = num1; i <= num2; i++)
             {
                 for (int j = 0; j < currentSchedule.Count(); j++)
@@ -312,7 +321,7 @@ namespace ProgettoMMDS
             //parte a dx
             currentIndex = currentSchedule.Count() - 1;
             secondIndex = currentIndex;
-            while ((currentIndex > num2)&&(secondIndex >= 0))
+            while ((currentIndex > num2) && (secondIndex >= 0))
             {
                 if (vector[secondIndex])
                 {
@@ -324,12 +333,11 @@ namespace ProgettoMMDS
                 {
                     secondIndex--;
                 }
-            
+
             }
             currentSchedule = LocalSearchBestInsert(currentSchedule);
             return currentSchedule;
         }
-
         /// <summary>
         /// Genero un figlio a partire da due soluzioni
         /// La tecnica utilizzata è un order Crossover, con una modifica che non modifica la posizione delle macchine
@@ -398,7 +406,7 @@ namespace ProgettoMMDS
             //parte a dx
             currentIndex = currentSchedule.Count() - 1;
             secondIndex = currentIndex;
-            while ((currentIndex > num2)&&(secondIndex >= 0))
+            while ((currentIndex > num2) && (secondIndex >= 0))
             {
                 if (vector[secondIndex])
                 {
@@ -410,12 +418,11 @@ namespace ProgettoMMDS
                 {
                     secondIndex--;
                 }
-            
+
             }
             currentSchedule = LocalSearchBestInsert(currentSchedule);
             return currentSchedule;
         }
-
         /// <summary>
         /// Perturbazione di una soluzione
         /// </summary>
@@ -425,6 +432,7 @@ namespace ProgettoMMDS
         {
             Schedule currentSchedule = new Schedule(aSchedule);
             Random r = new Random();
+            //c'era 8 nel /
             for (int i = 0; i < currentSchedule.Count() / 4; i++)
             {
                 int num1 = r.Next(currentSchedule.Count());

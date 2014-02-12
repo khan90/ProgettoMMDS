@@ -218,12 +218,23 @@ namespace ProgettoMMDS
             stream.Close();
         }
 
-        internal void appendBestTardiness(int currentTardiness)
+        public void appendBestTardiness(int currentTardiness)
         {
             StreamWriter stream = System.IO.File.AppendText("Popolazioni.csv");
             stream.WriteLine(currentTardiness);
             stream.Close();
         }
+
+        public void appendPopulationCount(int populationCount)
+        {
+            StreamWriter stream = System.IO.File.AppendText("Conteggio.csv");
+            if (populationCount == -1)
+                stream.Write("\n");
+            else
+                stream.Write(populationCount + ";");
+            stream.Close();
+        }
+
 
         public int getNumberofMachine()
         {

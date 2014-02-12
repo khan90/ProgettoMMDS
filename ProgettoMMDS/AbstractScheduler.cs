@@ -6,6 +6,9 @@ using System.Threading;
 
 namespace ProgettoMMDS
 {
+    /// <summary>
+    /// Algoritmo per lo schedule astratto
+    /// </summary>
     abstract class AbstractScheduler
     {
         /// <summary>
@@ -70,7 +73,6 @@ namespace ProgettoMMDS
                         continue;
                     //SWAP
                     currentSchedule.swap(num1, num2);
-                    //Non c'è un modo più rapido di calcolare la tardiness?
                     currentTardy = currentSchedule.getTardiness();
                     if ((currentTardy < bestTardy))
                     {
@@ -97,6 +99,7 @@ namespace ProgettoMMDS
         /// <summary>
         ///Algoritmo di ricerca locale che sposta un elemento a caso nella migliore posizione.
         /// Tra tutti gli spostamenti possibili di un elemento scelto a caso prende quello che migliora di più la soluzione
+        /// Versione con massimo numero di iterazioni come parametro
         /// </summary>
         /// <param name="schedule">schedule su cui opero la ricerca locale</param>
         /// <param name="maxIterations">numero massimo di iterazioni per la ricerca locale</param>
